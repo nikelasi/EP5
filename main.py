@@ -32,7 +32,7 @@ async def help(ctx):
 
 @client.event
 async def on_message(message):
-	if message.content.strip() == "<@!734352159684034570>":
+	if message.content.strip() == "<@!784729572620894228>":
 		await message.channel.send(
 			f"My prefix is `{get_prefix(client, message)}`\ndo `{get_prefix(client, message)}help` for a list of commands!"
 		)
