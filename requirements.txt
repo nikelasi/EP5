@@ -1,2 +1,4 @@
 discord
 asyncio
+pymongo
+dnspython
