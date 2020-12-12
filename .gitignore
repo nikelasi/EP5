@@ -1,5 +1,5 @@
 # Specify filepatterns you want git to ignore.
 
-FyreChatENV/
 __pycache__/
-notes/
+tests/
+test_models/
