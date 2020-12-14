@@ -33,16 +33,11 @@ class econ(commands.Cog):
 			await msg.edit(content="fetching user data...")
 
 			embed = discord.Embed(
-				description=f"""
-				__User__
-				= Balance: **{data_parser.get_user_money()} Σ**
-				__Others__
-				= ServerID: `{data_parser.get_id()[0]}`
-				= UserID: `{data_parser.get_id()[1]}`
-				""",
+				description=f"__User__\n= Balance: **{data_parser.get_user_money()} Σ**\n__Others__\n= ServerID: `{data_parser.get_id()[0]}`\n= UserID: `{data_parser.get_id()[1]}`",
 				colour=0x3bb300
 			)
 
+			#embed.add_field(name="User", value=f"= Balance: **{data_parser.get_user_money()} Σ**")
 			embed.set_author(name=f"{member}", icon_url=member.avatar_url)
 			return await msg.edit(content=None, embed=embed)
 
@@ -59,13 +54,7 @@ class econ(commands.Cog):
 			await msg.edit(content="fetching user data...")
 
 			embed = discord.Embed(
-				description=f"""
-				__User__
-				= Balance: **{data_parser.get_user_money()} Σ**
-				__Others__
-				= ServerID: `{data_parser.get_id()[0]}`
-				= UserID: `{data_parser.get_id()[1]}`
-				""",
+				description=f"__User__\n= Balance: **{data_parser.get_user_money()} Σ**\n__Others__\n= ServerID: `{data_parser.get_id()[0]}`\n= UserID: `{data_parser.get_id()[1]}`",
 				colour=0x3bb300
 			)
 
