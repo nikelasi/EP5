@@ -24,6 +24,8 @@ class userdata(commands.Cog):
 			parser = UserDataParser(user)
 			lb += f"{ranking}) <@!{parser.get_id()[1]}> - **{parser.get_user_money()} Σ**\n"
 
+			if ranking == 10: break
+
 		embed = discord.Embed(
 			description=lb,
 			colour=embed_colour
