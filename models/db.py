@@ -93,7 +93,8 @@ class UserData:
 
 		return bool(result.matched_count) and bool(result.modified_count)
 
-
+	def fetch_user_of(self, guild_id):
+		return list(self.db.find({"_id": {"$regex": f"^{guild_id}-"}}))
 
 class Database:
 	"""Class to handle the whole database"""
