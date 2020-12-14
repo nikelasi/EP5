@@ -51,8 +51,8 @@ class userdata(commands.Cog):
 				colour=embed_colour
 			)
 
-			embed.add_field(name="User", value=f"= Balance: **{data_parser.get_user_money()} Σ**")
-			embed.add_field(name="Others", value=f"= ServerID: `{data_parser.get_id()[0]}`\n= UserID: `{data_parser.get_id()[1]}`")
+			embed.add_field(name="User", value=f"Balance: **{data_parser.get_user_money()} Σ**")
+			embed.add_field(name="Others", value=f"ServerID: `{data_parser.get_id()[0]}`\nUserID: `{data_parser.get_id()[1]}`")
 			embed.set_author(name=f"{member}", icon_url=member.avatar_url)
 			return await msg.edit(content=None, embed=embed)
 
@@ -72,8 +72,8 @@ class userdata(commands.Cog):
 				colour=embed_colour
 			)
 
-			embed.add_field(name="User", value=f"= Balance: **{data_parser.get_user_money()} Σ**")
-			embed.add_field(name="Others", value=f"= ServerID: `{data_parser.get_id()[0]}`\n= UserID: `{data_parser.get_id()[1]}`")
+			embed.add_field(name="User", value=f"Balance: **{data_parser.get_user_money()} Σ**")
+			embed.add_field(name="Others", value=f"ServerID: `{data_parser.get_id()[0]}`\nUserID: `{data_parser.get_id()[1]}`")
 			embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url)
 			return await msg.edit(content=None, embed=embed)
 
