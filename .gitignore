@@ -1,5 +1,6 @@
 # Specify filepatterns you want git to ignore.
-
+.flooignore
+.floo
 __pycache__/
 tests/
 test_models/

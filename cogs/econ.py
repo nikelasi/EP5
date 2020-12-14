@@ -98,7 +98,7 @@ class econ(commands.Cog):
 				)
 
 				embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url)
-				embed.add_field(name="Reward", value=f"{_prize} Σ", inline=True)
+				embed.add_field(name="Reward", value=f"**{_prize} Σ**", inline=True)
 				embed.add_field(name="Next Reward", value=f"{process_results['next_reward']}", inline=True)
 				return await msg.edit(content=None, embed=embed)
 
@@ -138,7 +138,7 @@ class econ(commands.Cog):
 				)
 
 				embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url)
-				embed.add_field(name="Reward", value=f"{_prize} Σ", inline=True)
+				embed.add_field(name="Reward", value=f"**{_prize} Σ**", inline=True)
 				embed.add_field(name="Next Reward", value=f"{process_results['next_reward']}", inline=True)
 				return await msg.edit(content=None, embed=embed)
 

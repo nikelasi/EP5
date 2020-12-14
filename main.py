@@ -1,7 +1,8 @@
-import os, json, time, asyncio
+import os, json, time, asyncio #pylint: disable=W0611
 import discord
 from discord.ext import commands
 from models.db import db
+from models.commands import help_cmd_struct
 
 owner_ids = [593735027121061889, 348307478808756224]
 in_development = True
@@ -9,35 +10,49 @@ in_development = True
 client = commands.Bot(command_prefix=db.prefix_db.get_prefix, case_insensitive=True)
 client.remove_command('help')
 
+def format_help_string(text, p, cmd):
+	return text.replace('{p}', f'{p}').replace('{cmd}', f'{cmd}')
+
 @client.command()
-async def help(ctx):
-	p = ctx.prefix
+async def help(ctx, cmd=None):
+	msg = await ctx.send(f"fetching command data...")
+	if cmd:
+		cmd = cmd.lower()
+		cmd_data = None
+
+		for aliases, data in help_cmd_struct.items():
+			cmd_data = (data, aliases) if cmd in aliases else None
+			if cmd_data: break
+		if not cmd_data: return await msg.edit(content=f"Command `{cmd}` does not exist!")
+
+		embed = discord.Embed(
+			title=f"**Command:** `{cmd}`",
+			description=f"{format_help_string(cmd_data[0]['description'], ctx.prefix, cmd)}",
+			colour=0x3bb300
+		)
+
+		for name, value in cmd_data[0]["fields"]:
+			embed.add_field(name=f"{format_help_string(name, ctx.prefix, cmd)}", value=f"{format_help_string(value, ctx.prefix, cmd)}", inline=True)
+
+		if type(cmd_data[1]) != str:
+			aliases = list(cmd_data[1])
+			aliases.remove(cmd)
+			aliases = map(lambda x: f"`{x}`", aliases)
+			embed.add_field(name="Aliases", value=f"{' '.join(aliases)}", inline=True)
+
+		return await msg.edit(content=None, embed=embed)
+
 	embed = discord.Embed(
-		description=f"""
-		__User__
-		= `{p}stats/stat/user/bal`
-		  - Check your stats
-		= `{p}stats @User`
-		  - Check @User's stats
-
-		= `{p}hourly`/`{p}daily`
-		  - Get a hourly/daily reward
-		  	[hourly: `1~20`, daily: `1~300`]
-
-		__Bot__
-		= `{p}prefix <prefix>`
-		  - Set my prefix to `<prefix>`!
-			[Requires Administrator]
-
-		= `{p}ping db`/`{p}ping time`/`{p}ping bot`
-		  - Get my database/response/bot ping!
-		""",
+		title=f"**Commands**",
+		description=f"Need more help? Run **`{ctx.prefix}help <command>`** to get info on a command!",
 		colour=0x3bb300
 	)
 
-	#embed.set_author(name="Help", icon_url=client.user.avatar_url)
-	embed.set_author(name="Help")
-	await ctx.send(embed=embed)
+	#embed.set_author(name="Commands", icon_url=client.user.avatar_url)
+	embed.add_field(name="User", value=f"`stats`", inline=True)
+	embed.add_field(name="Rewards", value=f"`hourly`, `daily`", inline=True)
+	embed.add_field(name="System", value=f"`ping`, `prefix`, `help`", inline=True)
+	return await msg.edit(content=None, embed=embed)
 
 @client.event
 async def on_message(message):

@@ -118,9 +118,10 @@ class Database:
 	def db_ping(self):
 		return self.database.list_collection_names()
 
-password = os.environ['MONGODB_PASSWORD']
-dbname = os.environ['MONGODB_DBNAME']
-username = os.environ["MONGODB_USER"]
-clustername = os.environ["MONGODB_CLUSTER"]
+if __name__ != "db":
+	password = os.environ['MONGODB_PASSWORD']
+	dbname = os.environ['MONGODB_DBNAME']
+	username = os.environ["MONGODB_USER"]
+	clustername = os.environ["MONGODB_CLUSTER"]
 
-db = Database(password, dbname, username, clustername)
+	db = Database(password, dbname, username, clustername)
