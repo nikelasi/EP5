@@ -2,25 +2,12 @@ import discord
 from discord.ext import commands
 from models.db import db
 from models.parser import UserDataParser
+from models.constants import embed_colour
 
 class userdata(commands.Cog):
 	"""cog to store commands related to userdatay"""
 	def __init__(self, client):
 		self.client = client
-
-	"""
-	@commands.command()
-	async def bank(self, ctx, cmdtype, val=None):
-		if not cmdtype.lower() in ["info", "withdraw", "deposit"]:
-			pass
-
-	@bank.error
-	async def bank_error(self, ctx, error):
-		if isinstance(error, commands.MissingRequiredArgument):
-			await ctx.send(f"Enter all required arguments!")
-		else:
-			await ctx.send(f"Error: {error}")
-	"""
 
 	@commands.command(aliases=["lb", "ldb"])
 	async def leaderboard(self, ctx):
@@ -28,21 +15,21 @@ class userdata(commands.Cog):
 		users = db.user_db.fetch_user_of(ctx.guild.id)
 		if not bool(len(users)):
 			return await msg.edit(content=f"Apparently, there are no users registered in this server\nTry again later")
-		await msg.edit("processing user data...")
+		await msg.edit(content="processing user data...")
 		lb = ""
 		users = sorted(users, key=lambda k: k["money"], reverse=True)
 		ranking = 0
 		for user in users:
 			ranking += 1
 			parser = UserDataParser(user)
-			lb += f"{ranking}) <@!{user.get_id()[1]}> - **{user.get_user_money()} Σ**\n"
+			lb += f"{ranking}) <@!{parser.get_id()[1]}> - **{parser.get_user_money()} Σ**\n"
 
 		embed = discord.Embed(
 			description=lb,
-			colour=0x3bb300
+			colour=embed_colour
 		)
 
-		embed.set_author(name=f"leaderboard")
+		embed.set_author(name=f"Leaderboard")
 		return await msg.edit(content=None, embed=embed)
 
 	@leaderboard.error
@@ -61,7 +48,7 @@ class userdata(commands.Cog):
 			await msg.edit(content="fetching user data...")
 
 			embed = discord.Embed(
-				colour=0x3bb300
+				colour=embed_colour
 			)
 
 			embed.add_field(name="User", value=f"= Balance: **{data_parser.get_user_money()} Σ**")
@@ -82,7 +69,7 @@ class userdata(commands.Cog):
 			await msg.edit(content="fetching user data...")
 
 			embed = discord.Embed(
-				colour=0x3bb300
+				colour=embed_colour
 			)
 
 			embed.add_field(name="User", value=f"= Balance: **{data_parser.get_user_money()} Σ**")

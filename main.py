@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 from models.db import db
 from models.commands import help_cmd_struct
+from models.constants import embed_colour
 
 owner_ids = [593735027121061889, 348307478808756224]
 in_development = True
@@ -28,7 +29,7 @@ async def help(ctx, cmd=None):
 		embed = discord.Embed(
 			title=f"**Command:** `{cmd}`",
 			description=f"{format_help_string(cmd_data[0]['description'], ctx.prefix, cmd)}",
-			colour=0x3bb300
+			colour=embed_colour
 		)
 
 		for name, value in cmd_data[0]["fields"]:
@@ -45,11 +46,11 @@ async def help(ctx, cmd=None):
 	embed = discord.Embed(
 		title=f"**Commands**",
 		description=f"Need more help? Run **`{ctx.prefix}help <command>`** to get info on a command!",
-		colour=0x3bb300
+		colour=embed_colour
 	)
 
 	#embed.set_author(name="Commands", icon_url=client.user.avatar_url)
-	embed.add_field(name="User", value=f"`stats`", inline=True)
+	embed.add_field(name="User", value=f"`stats`, `leaderboard`", inline=True)
 	embed.add_field(name="Rewards", value=f"`hourly`, `daily`", inline=True)
 	embed.add_field(name="System", value=f"`ping`, `prefix`, `help`", inline=True)
 	return await msg.edit(content=None, embed=embed)
@@ -95,7 +96,7 @@ async def on_command_error(ctx, error):
 	elif isinstance(error, commands.CommandOnCooldown):
 		embed = discord.Embed(
 			description=f"That command is on {str(error.cooldown.type).split('.')[-1]} cooldown,\ntry again in `{error.retry_after:,.2f}s!`",
-			colour=0x3bb300
+			colour=embed_colour
 		)
 		await ctx.send(embed=embed)
 	elif "TimeoutError" in str(error):

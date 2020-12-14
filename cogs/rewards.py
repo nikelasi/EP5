@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 from models.db import db
 from models.parser import UserDataParser
+from models.constants import embed_colour
 
 class RewardsCMDHandler:
 	def __init__(self):
@@ -27,7 +28,7 @@ class RewardsCMDHandler:
 			if process_results["update_status"]:
 				embed = discord.Embed(
 					description=f"**{_type.capitalize()} Reward**",
-					colour=0x3bb300
+					colour=embed_colour
 				)
 
 				embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url) #pylint: disable=E1101
@@ -39,7 +40,7 @@ class RewardsCMDHandler:
 
 		embed = discord.Embed(
 			description=f"<@!{data_parser.get_id()[1]}>, you already collected this,\nplease wait `{process_results['next_reward']}`",
-			colour=0x3bb300
+			colour=embed_colour
 		)
 		return await msg.edit(content=None, embed=embed)
 

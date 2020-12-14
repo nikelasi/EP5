@@ -6,6 +6,10 @@ help_cmd_struct = {
 			("Examples", "{p}{cmd}\n{p}{cmd} @User")
 		]
 	},
+	("leaderboard", "ldb", "lb"): {
+		"description": "`{p}{cmd}`\nSee the leaderboard of the server!\nSorted according to **Σ**",
+		"fields": []
+	},
 	("hourly"): {
 		"description": "`{p}{cmd}`\nClaim **[1~20]** Σ per hour",
 		"fields": []
