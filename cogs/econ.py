@@ -72,12 +72,11 @@ class econ(commands.Cog):
 
 			embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url)
 			return await msg.edit(content=None, embed=embed)
-		elif isinstance(error, commands.MemberNotFound):
+		elif isinstance(error, commands.MemberNotFound): #pylint: disable=E1101
 			await ctx.send(f"The member you specified isn\'t a discord member!")
-		else:
-			await ctx.send(f"Error: {error}")
 
 	@commands.command()
+	@commands.cooldown(1, 2, commands.BucketType.user)
 	async def hourly(self, ctx):
 		msg = await ctx.send(f"fetching your user data...")
 		user = db.user_db.fetch_user(ctx.author.id, ctx.guild.id)
@@ -115,10 +114,9 @@ class econ(commands.Cog):
 	async def hourly_error(self, ctx, error):
 		if isinstance(error, commands.MissingRequiredArgument):
 			await ctx.send(f"Please fill in the required arguments!\nRefer to `{ctx.prefix}help`!")
-		else:
-			await ctx.send(f"Error: {error}")
 
 	@commands.command()
+	@commands.cooldown(1, 2, commands.BucketType.user) #pylint: disable=E1101
 	async def daily(self, ctx):
 		msg = await ctx.send(f"fetching your user data...")
 		user = db.user_db.fetch_user(ctx.author.id, ctx.guild.id)
@@ -156,8 +154,6 @@ class econ(commands.Cog):
 	async def daily_error(self, ctx, error):
 		if isinstance(error, commands.MissingRequiredArgument):
 			await ctx.send(f"Please fill in the required arguments!\nRefer to `{ctx.prefix}help`!")
-		else:
-			await ctx.send(f"Error: {error}")
 
 
 def setup(client):

@@ -77,10 +77,17 @@ async def on_command_error(ctx, error):
 		pass
 	elif isinstance(error, commands.CheckFailure):
 		pass
+	elif isinstance(error, commands.CommandOnCooldown):
+		embed = discord.Embed(
+			description=f"That command is on {str(error.cooldown.type).split('.')[-1]} cooldown,\ntry again in `{error.retry_after:,.2f}s!`",
+			colour=0x3bb300
+		)
+		await ctx.send(embed=embed)
 	elif "TimeoutError" in str(error):
 		pass
-	#else:
-	#	await ctx.send(f"MainThread:\nCommand: `{ctx.message.content}`\nError: {error}")
+	else:
+		await ctx.send(f"{error}")
+		raise error
 
 @client.command()
 @commands.has_permissions(administrator=True)
@@ -128,7 +135,7 @@ async def reload(ctx, extension):
 
 @help.error
 async def help_error(ctx, error):
-	print(error)
+	pass
 
 @prefix.error
 async def prefix_error(ctx, error):
@@ -143,7 +150,7 @@ async def prefix_error(ctx, error):
 
 @ping.error
 async def ping_error(ctx, error):
-	await ctx.send(f"Error: {error}")
+	pass
 
 for filename in os.listdir('./cogs'):
 	if filename.endswith(".py"):
