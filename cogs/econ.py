@@ -1,4 +1,3 @@
-import random
 import discord
 from discord.ext import commands
 from models.db import db
@@ -74,86 +73,6 @@ class econ(commands.Cog):
 			return await msg.edit(content=None, embed=embed)
 		elif isinstance(error, commands.MemberNotFound): #pylint: disable=E1101
 			await ctx.send(f"The member you specified isn\'t a discord member!")
-
-	@commands.command()
-	@commands.cooldown(1, 2, commands.BucketType.user)
-	async def hourly(self, ctx):
-		msg = await ctx.send(f"fetching your user data...")
-		user = db.user_db.fetch_user(ctx.author.id, ctx.guild.id)
-		if not user:
-			return await msg.edit(content=f"<@!{ctx.author.id}>, failed to fetch your user data, try again later.")
-		data_parser = UserDataParser(user)
-		await msg.edit(content="processing reward...")
-
-		_type, _period, _prize = ("hourly", 60*60, random.randint(1, 20))
-		reward_data = (_type, _period, _prize)
-
-		process_results = data_parser.process_user_rewards(reward_data, db.user_db)
-
-		if process_results["eligible"]:
-			if process_results["update_status"]:
-				embed = discord.Embed(
-					description=f"**{_type.capitalize()} Reward**",
-					colour=0x3bb300
-				)
-
-				embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url)
-				embed.add_field(name="Reward", value=f"**{_prize} Σ**", inline=True)
-				embed.add_field(name="Next Reward", value=f"{process_results['next_reward']}", inline=True)
-				return await msg.edit(content=None, embed=embed)
-
-			return await msg.edit(content="Something went wrong while redeeming the reward...\nTry again later.")
-
-		embed = discord.Embed(
-			description=f"<@!{data_parser.get_id()[1]}>, you already collected this,\nplease wait `{process_results['next_reward']}`",
-			colour=0x3bb300
-		)
-		return await msg.edit(content=None, embed=embed)
-
-	@hourly.error
-	async def hourly_error(self, ctx, error):
-		if isinstance(error, commands.MissingRequiredArgument):
-			await ctx.send(f"Please fill in the required arguments!\nRefer to `{ctx.prefix}help`!")
-
-	@commands.command()
-	@commands.cooldown(1, 2, commands.BucketType.user) #pylint: disable=E1101
-	async def daily(self, ctx):
-		msg = await ctx.send(f"fetching your user data...")
-		user = db.user_db.fetch_user(ctx.author.id, ctx.guild.id)
-		if not user:
-			return await msg.edit(content=f"<@!{ctx.author.id}>, failed to fetch your user data, try again later.")
-		data_parser = UserDataParser(user)
-		await msg.edit(content="processing reward...")
-
-		_type, _period, _prize = ("daily", 60*60*24, random.randint(1, 300))
-		reward_data = (_type, _period, _prize)
-
-		process_results = data_parser.process_user_rewards(reward_data, db.user_db)
-
-		if process_results["eligible"]:
-			if process_results["update_status"]:
-				embed = discord.Embed(
-					description=f"**{_type.capitalize()} Reward**",
-					colour=0x3bb300
-				)
-
-				embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url)
-				embed.add_field(name="Reward", value=f"**{_prize} Σ**", inline=True)
-				embed.add_field(name="Next Reward", value=f"{process_results['next_reward']}", inline=True)
-				return await msg.edit(content=None, embed=embed)
-
-			return await msg.edit(content="Something went wrong while redeeming the reward...\nTry again later.")
-
-		embed = discord.Embed(
-			description=f"<@!{data_parser.get_id()[1]}>, you already collected this,\nplease wait `{process_results['next_reward']}`",
-			colour=0x3bb300
-		)
-		return await msg.edit(content=None, embed=embed)
-
-	@daily.error
-	async def daily_error(self, ctx, error):
-		if isinstance(error, commands.MissingRequiredArgument):
-			await ctx.send(f"Please fill in the required arguments!\nRefer to `{ctx.prefix}help`!")
 
 
 def setup(client):

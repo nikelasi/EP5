@@ -11,7 +11,7 @@ help_cmd_struct = {
 		"fields": []
 	},
 	("daily"): {
-		"description": "`{p}{cmd}`\nClaim **[1~200]** Σ per day",
+		"description": "`{p}{cmd}`\nClaim **[1~300]** Σ per day",
 		"fields": []
 	},
 	("prefix"): {
