@@ -42,6 +42,8 @@ class userdata(commands.Cog):
 	@commands.command(aliases=["stats", "user", "bal"])
 	async def stat(self, ctx, member: discord.Member):
 		if member:
+			if member.bot:
+				return await ctx.send(f"<@!{member.id}> is a bot!")
 			msg = await ctx.send("processing data...")
 			user = db.user_db.fetch_user(member.id, ctx.guild.id)
 			if not user:
