@@ -60,7 +60,7 @@ class rewards(commands.Cog):
 	@hourly.error
 	async def hourly_error(self, ctx, error):
 		if isinstance(error, commands.MissingRequiredArgument):
-			await ctx.send(f"Please fill in the required arguments!\nRefer to `{ctx.prefix}help`!")
+			await ctx.send(f"Ok, what?\nRefer to `{ctx.prefix}help`!")
 
 	@commands.command()
 	@commands.cooldown(1, 2, commands.BucketType.user) #pylint: disable=E1101
@@ -74,7 +74,7 @@ class rewards(commands.Cog):
 	@daily.error
 	async def daily_error(self, ctx, error):
 		if isinstance(error, commands.MissingRequiredArgument):
-			await ctx.send(f"Please fill in the required arguments!\nRefer to `{ctx.prefix}help`!")
+			await ctx.send(f"Congrats, you've found and easter egg. By right this should never happen but oh well.\nRefer to `{ctx.prefix}help`!")
 
 def setup(client):
 	client.add_cog(rewards(client))

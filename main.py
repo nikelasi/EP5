@@ -156,13 +156,11 @@ async def help_error(ctx, error):
 @prefix.error
 async def prefix_error(ctx, error):
 	if isinstance(error, discord.Forbidden):
-		await ctx.send("I don't have the necessary permissions to change my prefix")
+		await ctx.send("I require permission. I am not allowed to change my prefix yet so...")
 	elif isinstance(error, commands.CheckFailure):
-		await ctx.send("Sorry, you need to be an administrator to change my prefix")
+		await ctx.send("You appear to be unqualified or not have the permission.\nYou need to be admin to change my prefix")
 	elif isinstance(error, commands.MissingRequiredArgument):
-		await ctx.send(f"Please specify the prefix you want to set\nFor e.g. `{ctx.prefix}prefix !` will change my prefix to `!`")
-	else:
-		await ctx.send(f"Error: {error}")
+		await ctx.send(f"Setting random 11-digit long prefix...\nGIVE ME A PREFIX GENIUS\nExample:`{ctx.prefix}prefix !` will change my prefix to `!`")
 
 @ping.error
 async def ping_error(ctx, error):

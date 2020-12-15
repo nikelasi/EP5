@@ -14,7 +14,7 @@ class userdata(commands.Cog):
 		msg = await ctx.send("fetching user data...")
 		users = db.user_db.fetch_user_of(ctx.guild.id)
 		if not bool(len(users)):
-			return await msg.edit(content=f"Apparently, there are no users registered in this server\nTry again later")
+			return await msg.edit(content=f"And I thought this server was empty! How am I here?\nPlease try again later")
 		await msg.edit(content="processing user data...")
 		lb = ""
 		users = sorted(users, key=lambda k: k["money"], reverse=True)
@@ -37,17 +37,17 @@ class userdata(commands.Cog):
 	@leaderboard.error
 	async def leaderboard_error(self, ctx, error):
 		if isinstance(error, commands.MissingRequiredArgument):
-			await ctx.send(f"Please pass in all the required arguments!")
+			await ctx.send(f"An easter egg! Nice")
 
 	@commands.command(aliases=["stats", "user", "bal"])
 	async def stat(self, ctx, member: discord.Member):
 		if member:
 			if member.bot:
-				return await ctx.send(f"<@!{member.id}> is a bot!")
+				return await ctx.send(f"Very funny, you know <@!{member.id}> is a bot.")
 			msg = await ctx.send("processing data...")
 			user = db.user_db.fetch_user(member.id, ctx.guild.id)
 			if not user:
-				return await msg.edit(content=f"<@!{member.id}> is not registered in the bot\'s database\nTry again later")
+				return await msg.edit(content=f"<@!{member.id}> exists? Never heard of them, hold on.\nPlease try again later")
 			data_parser = UserDataParser(user)
 			await msg.edit(content="fetching user data...")
 
@@ -60,7 +60,7 @@ class userdata(commands.Cog):
 			embed.set_author(name=f"{member}", icon_url=member.avatar_url)
 			return await msg.edit(content=None, embed=embed)
 
-		return await ctx.send("You did not specify a member!")
+		return await ctx.send(f"Good job lmao. You broke the system")
 
 	@stat.error
 	async def stat_error(self, ctx, error):
@@ -68,7 +68,7 @@ class userdata(commands.Cog):
 			msg = await ctx.send("processing data...")
 			user = db.user_db.fetch_user(ctx.author.id, ctx.guild.id)
 			if not user:
-				return await msg.edit(content=f"You are not registered in the bot\'s database\nTry again later")
+				return await msg.edit(content=f"It appears that you don\'t exist to me. (No offense)\nPlease try again later")
 			data_parser = UserDataParser(user)
 			await msg.edit(content="fetching user data...")
 
@@ -82,7 +82,7 @@ class userdata(commands.Cog):
 			return await msg.edit(content=None, embed=embed)
 
 		elif isinstance(error, commands.MemberNotFound): #pylint: disable=E1101
-			await ctx.send(f"The member you specified isn\'t a discord member!")
+			await ctx.send(f"Hilarious, that person is not in discord.")
 
 
 def setup(client):
