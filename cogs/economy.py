@@ -122,7 +122,7 @@ class economy(commands.Cog):
 			if not result["success"]: return await msg.edit(content=f"Something went wrong while depositing, try again later")
 
 			embed = discord.Embed(
-				description=f"You have deposited **{result['amount']} Σ** from the bank!\nNew User Balance: **{result['new_user_bal']} Σ**\nNew Bank Balance: **{result['new_bank_bal']} Σ**",
+				description=f"You have deposited **{result['amount']} Σ** in the bank!\nNew User Balance: **{result['new_user_bal']} Σ**\nNew Bank Balance: **{result['new_bank_bal']} Σ**",
 				colour=embed_colour
 			)
 			embed.set_author(name=f"Bank Deposition")
