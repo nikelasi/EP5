@@ -50,19 +50,24 @@ class economy(commands.Cog):
 		embed.set_author(name=f"Payment success")
 		await msg.edit(content=None, embed=embed)
 
-	"""
-	@commands.command()
+	@pay.error
+	async def pay_error(self, ctx, error):
+		if isinstance(error, commands.MissingRequiredArgument):
+			await ctx.send(f"Please fill in the required arguments! Check `!help pay`")
+		elif isinstance(error, commands.MemberNotFound): #pylint: disable=E1101
+			await ctx.send(f"Hilarious, that person does not exist in discord.")
+
+'''	@commands.command()
 	async def bank(self, ctx, cmdtype, val=None):
-		if not cmdtype.lower() in ["info", "withdraw", "deposit"]:
-			pass
+		msg = await ctx.send("processing...")
+		if not cmdtype.lower() in ["info", "withdraw", "deposit"]: return await msg.edit(content=f"")
 
 	@bank.error
 	async def bank_error(self, ctx, error):
 		if isinstance(error, commands.MissingRequiredArgument):
 			await ctx.send(f"Enter all required arguments!")
 		else:
-			await ctx.send(f"Error: {error}")
-	"""
+			await ctx.send(f"Error: {error}")'''
 
 def setup(client):
 	client.add_cog(economy(client))
