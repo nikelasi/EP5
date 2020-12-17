@@ -55,7 +55,7 @@ class economy(commands.Cog):
 		if isinstance(error, commands.MissingRequiredArgument):
 			await ctx.send(f"Please fill in the required arguments! Check `!help pay`")
 
-@commands.command()
+	@commands.command()
 	async def bank(self, ctx, cmdtype, val=None):
 		msg = await ctx.send("processing...")
 		if not cmdtype.lower() in ["info", "withdraw", "deposit"]: return await msg.edit(content=f"")
