@@ -54,8 +54,6 @@ class economy(commands.Cog):
 	async def pay_error(self, ctx, error):
 		if isinstance(error, commands.MissingRequiredArgument):
 			await ctx.send(f"Please fill in the required arguments! Check `!help pay`")
-		elif isinstance(error, commands.MemberNotFound): #pylint: disable=E1101
-			await ctx.send(f"Hilarious, that person does not exist in discord.")
 
 '''	@commands.command()
 	async def bank(self, ctx, cmdtype, val=None):

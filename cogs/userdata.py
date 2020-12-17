@@ -81,9 +81,6 @@ class userdata(commands.Cog):
 			embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url)
 			return await msg.edit(content=None, embed=embed)
 
-		elif isinstance(error, commands.MemberNotFound): #pylint: disable=E1101
-			await ctx.send(f"Hilarious, that person is not in discord.")
-
 
 def setup(client):
 	client.add_cog(userdata(client))
