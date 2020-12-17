@@ -56,6 +56,7 @@ class economy(commands.Cog):
 			await ctx.send(f"Please fill in the required arguments! Check `{ctx.prefix}help pay`")
 
 	@commands.command()
+	@commands.cooldown(1, 2, commands.BucketType.user)
 	async def bank(self, ctx, cmdtype, amount=None):
 		msg = await ctx.send("processing...")
 		if not cmdtype.lower() in ["info", "withdraw", "deposit"]: return await msg.edit(content=f"`{cmdtype}` is none of the following:\n- `info`\n- `withdraw`\n- `deposit`\ndo `{ctx.prefix}help bank` for more info")
