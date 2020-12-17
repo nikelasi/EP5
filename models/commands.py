@@ -41,5 +41,11 @@ help_cmd_struct = {
 		"fields": [
 			("Examples", "{p}{cmd} @User 100\n{p}{cmd} @User 20")
 		]
+	},
+	("bank"): {
+		"description": "`{p}{cmd}` info\nChecks your bank balance\n\n`{p}{cmd} withdraw <amount>`\nWithdraws <amount> from your bank balance\n\n`{p}{cmd}` deposit <amount>\nDeposits <amount> into your bank balance",
+		"fields": [
+			("Examples", "{p}{cmd} info\n{p}{cmd} wiithdraw 1000\n{p}{cmd} deposit 2500")
+		]
 	}
 }

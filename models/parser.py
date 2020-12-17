@@ -37,7 +37,34 @@ class UserDataParser:
 	def get_user_money(self):
 		return self.user_data["money"]
 
-	def calculate_interest_gained(self, user_db):
+	def get_bank_money(self):
+		return self.bank_data["money"]
+
+	def process_bank_ops(self, withdraw_or_deposit, amount, user_db):
+		bank_money, user_money = self.bank_data["money"], self.user_data["money"]
+		if withdraw_or_deposit == "withdraw":
+			bank_money -= amount
+			user_money += amount
+		elif withdraw_or_deposit == "deposit":
+			bank_money += amount
+			user_money -= amount
+
+		success = user_db.update_user_set_fields(
+			{"_id": self.user_data["_id"]},
+			[
+				("bank.money", bank_money),
+				("money", user_money)
+			]
+		)
+
+		return {
+			"success": success,
+			"amount": amount,
+			"new_bank_bal": bank_money,
+			"new_user_bal": user_money
+		}
+
+	def process_bank_interest(self, user_db):
 		last_seen = self.bank_data["last_seen"]
 		bank_money = self.bank_data["money"]
 		interest = self.bank_data["interest"]
@@ -49,9 +76,9 @@ class UserDataParser:
 					("bank.last_seen", int(time.time()))
 				]
 			)
-			return "new bank account"
+			return 0
 		elif bank_money == 0:
-			return "no money to compound interest"
+			return 0
 		
 		period = 60*60 #3600s AKA 1h
 		current_time = int(time.time())
@@ -59,7 +86,7 @@ class UserDataParser:
 		interest_iteration = time_since_last_seen // period
 
 		if interest_iteration == 0:
-			return "no change"
+			return 0
 
 		time_offset = time_since_last_seen % period
 		new_last_seen = current_time - time_offset
@@ -68,7 +95,7 @@ class UserDataParser:
 		compound_interest = new_amount - bank_money
 
 		if compound_interest == 0 or new_amount == bank_money:
-			return "0 change"
+			return 0
 
 		success = user_db.update_user_set_fields(
 			{"_id": self.user_data["_id"]},
@@ -77,11 +104,16 @@ class UserDataParser:
 				("bank.money", new_amount)
 			]
 		)
+
+		if success:
+			#update parser's info
+			self.bank_data["money"] = new_amount
+			self.bank_data["last_seen"] = new_last_seen
+
 		return {
-			"status": success,
+			"success": success,
 			"hours": interest_iteration,
-			"previous": bank_money,
-			"now": new_amount
+			"interest": new_amount - bank_money
 		}
 
 	def process_payment(amount, sender, receiver, user_db):
