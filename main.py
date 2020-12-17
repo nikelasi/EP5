@@ -51,7 +51,7 @@ async def help(ctx, cmd=None):
 
 	#embed.set_author(name="Commands", icon_url=client.user.avatar_url)
 	embed.add_field(name="User", value=f"`stats`, `leaderboard`", inline=True)
-	embed.add_field(name="Economy", value=f"`pay`", inline=True)
+	embed.add_field(name="Economy", value=f"`pay`, `bank`", inline=True)
 	embed.add_field(name="Rewards", value=f"`hourly`, `daily`", inline=True)
 	embed.add_field(name="System", value=f"`ping`, `prefix`, `help`", inline=True)
 	return await msg.edit(content=None, embed=embed)
@@ -100,6 +100,8 @@ async def on_command_error(ctx, error):
 			colour=embed_colour
 		)
 		await ctx.send(embed=embed)
+	elif isinstance(error, commands.MemberNotFound):
+		await ctx.send(f"Hilarious, that person does not exist in discord.")
 	elif "TimeoutError" in str(error):
 		pass
 	else:
