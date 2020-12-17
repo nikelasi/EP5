@@ -84,6 +84,29 @@ class UserDataParser:
 			"now": new_amount
 		}
 
+	def process_payment(amount, sender, receiver, user_db):
+		sender_money, receiver_money = sender.get_user_money(), receiver.get_user_money()
+		sender_money -= amount
+		receiver_money += amount
+
+		sender_update_success = user_db.update_user_set_fields(
+			{"_id": sender.user_data["_id"]},
+			[("money", sender_money)]
+		)
+
+		receiver_update_success = user_db.update_user_set_fields(
+			{"_id": receiver.user_data["_id"]},
+			[("money", receiver_money)]
+		)
+
+		return {
+			"receiver_updated": receiver_update_success,
+			"sender_updated": sender_update_success,
+			"amount": amount,
+			"sender_balance": sender_money,
+			"receiver_balance": receiver_money
+		}
+
 	def process_user_rewards(self, reward_details, user_db):
 
 		_type, _period, _prize = reward_details

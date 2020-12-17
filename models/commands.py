@@ -35,5 +35,11 @@ help_cmd_struct = {
 		"fields": [
 			("Examples", "{p}{cmd}\n{p}{cmd} ping\n{p}{cmd} stats")
 		]
+	},
+	("pay", "send"): {
+		"description": "`{p}{cmd} @User <amount>`\nPays @User **<amount> Σ**\n[1 execution per 2s cooldown]",
+		"fields": [
+			("Examples", "{p}{cmd} @User 100\n{p}{cmd} @User 20")
+		]
 	}
 }

@@ -51,6 +51,7 @@ async def help(ctx, cmd=None):
 
 	#embed.set_author(name="Commands", icon_url=client.user.avatar_url)
 	embed.add_field(name="User", value=f"`stats`, `leaderboard`", inline=True)
+	embed.add_field(name="Economy", value=f"`pay`", inline=True)
 	embed.add_field(name="Rewards", value=f"`hourly`, `daily`", inline=True)
 	embed.add_field(name="System", value=f"`ping`, `prefix`, `help`", inline=True)
 	return await msg.edit(content=None, embed=embed)

@@ -86,9 +86,7 @@ class UserData:
 
 		result = self.db.update_one(
 			_filter,
-			{
-				"$set": fields_to_set
-			}
+			{"$set": fields_to_set}
 		)
 
 		return bool(result.matched_count) and bool(result.modified_count)
