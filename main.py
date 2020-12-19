@@ -6,7 +6,7 @@ from models.commands import help_cmd_struct
 from models.constants import embed_colour
 
 owner_ids = [593735027121061889, 348307478808756224]
-in_development = True
+in_development = False
 
 client = commands.Bot(command_prefix=db.prefix_db.get_prefix, case_insensitive=True)
 client.remove_command('help')

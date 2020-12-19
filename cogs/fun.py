@@ -65,7 +65,6 @@ class fun(commands.Cog):
 		embed.add_field(name="Balance", value=f"**{new_balance} Σ**", inline=True)
 		return await msg.edit(content=None, embed=embed)
 
-
 	@coinflip.error
 	async def coinflip_error(self, ctx, error):
 		if isinstance(error, commands.MissingRequiredArgument):
