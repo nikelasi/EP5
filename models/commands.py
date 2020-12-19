@@ -57,7 +57,8 @@ help_cmd_struct = {
 	("item", "shop"): {
 		"description": "`{p}{cmd} list`\nLists the items available\n\n`{p}{cmd} info <item-name>`\nReturns more info on <item-name>\n\n`{p}{cmd} <buy/sell> <item-name>`\nBuys/Sells 1 of <item-name>\n\n`{p}{cmd} <buy/sell> <item-name> <count>`\nBuys/Sells <count> of <item-name>",
 		"fields": [
-			("Examples": "{p}{cmd} list\n{p}{cmd} buy Item\n{p}{cmd} sell Item 10\n{p}{cmd} info Item")
+			("Examples", "{p}{cmd} list\n{p}{cmd} buy Item\n{p}{cmd} sell Item 10\n{p}{cmd} info Item"),
+			("Important", "If the item includes spaces, you must do double quotes!\nFor example, if it is `Long Long Item Name`, you type \"Long Long Item Name\" instead.")
 		]
 	},
 	("backpack", "bp"): {

@@ -110,7 +110,7 @@ class ItemsData:
 	def set_items_of(self, guild_id, user_id, item_name, new_item_count, new_supply_count):
 
 		fields = {f"owners.{user_id}": new_item_count}
-		if supply: fields["supply"] = new_supply_count
+		if new_supply_count: fields["supply"] = new_supply_count
 
 		result = self.db.update_one(
 			{"name": item_name, "server_id": f"{guild_id}"},

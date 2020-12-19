@@ -104,6 +104,8 @@ async def on_command_error(ctx, error):
 		await ctx.send(embed=embed)
 	elif isinstance(error, commands.MemberNotFound):
 		await ctx.send(f"Hilarious, that person does not exist in discord.")
+	elif isinstance(error, commands.UnexpectedQuoteError):
+		await ctx.send(f"If you want to include a quote, you must quote the whole thing\nFor eg. `NJ's Coding Skills bad` will be `\"NJ's Coding Skills bad\"`")
 	elif "TimeoutError" in str(error):
 		pass
 	else:
