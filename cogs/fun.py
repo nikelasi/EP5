@@ -61,7 +61,6 @@ class fun(commands.Cog):
 			"wrong": user_parser.update_user_money(new_balance, db.user_db)
 		}.get(guess)
 
-		if success: return await msg.edit(content=f"Something went wrong while crediting your new balance, try again later")
 		embed.description += win_indicator
 		embed.add_field(name="Balance", value=f"**{new_balance} Σ**", inline=True)
 		return await msg.edit(content=None, embed=embed)
