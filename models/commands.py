@@ -53,5 +53,15 @@ help_cmd_struct = {
 		"fields": [
 			("Examples", "{p}{cmd}\n{p}{cmd} Heads\n{p}{cmd} Tails 1000")
 		]
+	},
+	("item", "shop"): {
+		"description": "`{p}{cmd} list`\nLists the items available\n\n`{p}{cmd} info <item-name>`\nReturns more info on <item-name>\n\n`{p}{cmd} <buy/sell> <item-name>`\nBuys/Sells 1 of <item-name>\n\n`{p}{cmd} <buy/sell> <item-name> <count>`\nBuys/Sells <count> of <item-name>",
+		"fields": [
+			("Examples": "{p}{cmd} list\n{p}{cmd} buy Item\n{p}{cmd} sell Item 10\n{p}{cmd} info Item")
+		]
+	},
+	("backpack", "bp"): {
+		"description": "`{p}{cmd}`\nReturns your backpack of items",
+		"fields": []
 	}
 }

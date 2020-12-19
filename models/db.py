@@ -94,6 +94,47 @@ class UserData:
 	def fetch_user_of(self, guild_id):
 		return list(self.db.find({"_id": {"$regex": f"^{guild_id}-"}}))
 
+class ItemsData:
+	"""Class handling item data"""
+	data_key = "items"
+	def __init__(self, db, parent_db):
+		self.db = db[self.data_key]
+		self.parent = parent_db
+
+	def fetch_items_of(self, guild_id):
+		return list(self.db.find({"server_id": f"{guild_id}"}))
+
+	def fetch_user_items(self, user_id):
+		return list(self.db.find({f"owners.{user_id}": {"$exists": True}}))
+
+	def set_items_of(self, guild_id, user_id, item_name, new_item_count, new_supply_count):
+
+		fields = {f"owners.{user_id}": new_item_count}
+		if supply: fields["supply"] = new_supply_count
+
+		result = self.db.update_one(
+			{"name": item_name, "server_id": f"{guild_id}"},
+			{"$set": fields}
+		)
+		success = (bool(result.matched_count) and bool(result.modified_count))
+
+		return {
+			"success": success,
+			"item": item_name,
+			"new_count": new_item_count
+		}
+
+	def remove_item_from_owner(self, guild_id, user_id, item_name):
+
+		result = self.db.update_one(
+			{"name": item_name, "server_id": f"{guild_id}"},
+			{"$unset": {f"owners.{user_id}": 0}}
+		)
+		success = (bool(result.matched_count) and bool(result.modified_count))
+		return {
+			"success": success,
+		}
+
 class Database:
 	"""Class to handle the whole database"""
 	def __init__(self, password, dbname, username, clustername):
@@ -106,6 +147,7 @@ class Database:
 
 		self.prefix_db = PrefixData(self.database)
 		self.user_db = UserData(self.database, self)
+		self.items_db = ItemsData(self.database, self)
 
 		#init with all users
 		self.users = []
