@@ -47,5 +47,11 @@ help_cmd_struct = {
 		"fields": [
 			("Examples", "{p}{cmd} info\n{p}{cmd} wiithdraw 1000\n{p}{cmd} deposit 2500")
 		]
+	},
+	("cf", "coinflip", "flip"): {
+		"description": "`{p}{cmd}`\nFlips a coin and returns heads or tails\n\n`{p}{cmd} <Heads/Tails>`\nFlips a coin and tells you whether your guess was correct\n\n`{p}{cmd} <Heads/Tails> <bet>`\nFlips a coin and if your guess was correct, you will win the bet",
+		"fields": [
+			("Examples", "{p}{cmd}\n{p}{cmd} Heads\n{p}{cmd} Tails 1000")
+		]
 	}
 }

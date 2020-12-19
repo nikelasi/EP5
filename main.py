@@ -53,6 +53,7 @@ async def help(ctx, cmd=None):
 	embed.add_field(name="User", value=f"`stats`, `leaderboard`", inline=True)
 	embed.add_field(name="Economy", value=f"`pay`, `bank`", inline=True)
 	embed.add_field(name="Rewards", value=f"`hourly`, `daily`", inline=True)
+	embed.add_field(name="Fun", value=f"`coinflip`", inline=True)
 	embed.add_field(name="System", value=f"`ping`, `prefix`, `help`", inline=True)
 	return await msg.edit(content=None, embed=embed)
 

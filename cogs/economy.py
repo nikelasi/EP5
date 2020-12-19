@@ -59,7 +59,7 @@ class economy(commands.Cog):
 	@commands.cooldown(1, 2, commands.BucketType.user)
 	async def bank(self, ctx, cmdtype, amount=None):
 		msg = await ctx.send("processing...")
-		if not cmdtype.lower() in ["info", "withdraw", "deposit"]: return await msg.edit(content=f"`{cmdtype}` is none of the following:\n- `info`\n- `withdraw`\n- `deposit`\ndo `{ctx.prefix}help bank` for more info")
+		if not cmdtype.lower() in ["info", "withdraw", "deposit", "stats"]: return await msg.edit(content=f"`{cmdtype}` is none of the following:\n- `info`\n- `withdraw`\n- `deposit`\ndo `{ctx.prefix}help bank` for more info")
 		
 		user = db.user_db.fetch_user(ctx.author.id, ctx.guild.id)
 		if not user: return await msg.edit(content=f"Hmm... somehow you don\'t exist to me, try again later!")
@@ -76,7 +76,7 @@ class economy(commands.Cog):
 			)
 			await ctx.send(embed=embed)
 
-		if cmdtype.lower() == "info":
+		if cmdtype.lower() == "info" or cmdtype.lower() == "stats":
 			embed = discord.Embed(
 				description=f"**Bank Info**",
 				colour=embed_colour

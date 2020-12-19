@@ -4,6 +4,7 @@ class ProcessingTools:
 	def __init__(self):
 		pass
 
+	@staticmethod
 	def seconds_to_time(seconds):
 
 		days = (seconds // (60*60*24)), "day"
@@ -116,20 +117,14 @@ class UserDataParser:
 			"interest": new_amount - bank_money
 		}
 
+	@staticmethod
 	def process_payment(amount, sender, receiver, user_db):
 		sender_money, receiver_money = sender.get_user_money(), receiver.get_user_money()
 		sender_money -= amount
 		receiver_money += amount
 
-		sender_update_success = user_db.update_user_set_fields(
-			{"_id": sender.user_data["_id"]},
-			[("money", sender_money)]
-		)
-
-		receiver_update_success = user_db.update_user_set_fields(
-			{"_id": receiver.user_data["_id"]},
-			[("money", receiver_money)]
-		)
+		sender_update_success = sender.update_user_money(sender_money, user_db)
+		receiver_update_success = receiver.update_user_money(receiver_money, user_db)
 
 		return {
 			"receiver_updated": receiver_update_success,
@@ -138,6 +133,12 @@ class UserDataParser:
 			"sender_balance": sender_money,
 			"receiver_balance": receiver_money
 		}
+
+	def update_user_money(self, new_amount, user_db):
+		return user_db.update_user_set_fields(
+			{"_id": self.user_data["_id"]},
+			[("money", new_amount)]
+		)
 
 	def process_user_rewards(self, reward_details, user_db):
 
