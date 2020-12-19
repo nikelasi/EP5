@@ -14,6 +14,7 @@ class fun(commands.Cog):
 		self.client = client
 
 	@commands.command(aliases=["flip", "cf"])
+	@commands.cooldown(1, 2, commands.BucketType.user)
 	async def coinflip(self, ctx, heads_or_tails=None, bet=None):
 
 		msg = await ctx.send("flipping coin...")
