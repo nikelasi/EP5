@@ -14,13 +14,16 @@ client.remove_command('help')
 def format_help_string(text, p, cmd):
 	return text.replace('{p}', f'{p}').replace('{cmd}', f'{cmd}')
 
-def help_embed_for(cmd):
+def get_cmd_data_for(cmd):
 
 	cmd_data = None
 	for aliases, data in help_cmd_struct.items():
 		cmd_data = (data, aliases) if cmd in aliases else None
-		if cmd_data: break
-	if not cmd_data: return await msg.edit(content=f"Command `{cmd}` does not exist!")
+		if cmd_data:
+			return cmd_data
+	return cmd_data
+
+def get_help_embed_for(cmd, cmd_data, ctx):
 
 	embed = discord.Embed(
 		title=f"**Command:** `{cmd}`",
@@ -44,7 +47,9 @@ async def help(ctx, cmd=None):
 	msg = await ctx.send(f"fetching command data...")
 	if cmd:
 		cmd = cmd.lower()
-		return await msg.edit(content=None, embed=help_embed_for(cmd))
+		cmd_data = get_cmd_data_for(cmd)
+		if not cmd_data: return await msg.edit(content=f"Command `{cmd}` does not exist!")
+		return await msg.edit(content=None, embed=get_help_embed_for(cmd, cmd_data, ctx))
 
 	embed = discord.Embed(
 		title=f"**Commands**",
@@ -55,7 +60,7 @@ async def help(ctx, cmd=None):
 	#embed.set_author(name="Commands", icon_url=client.user.avatar_url)
 	embed.add_field(name="User", value=f"`stats`, `leaderboard`", inline=True)
 	embed.add_field(name="Economy", value=f"`pay`, `bank`", inline=True)
-	embed.add_field(name="Items", value=f"`backpack`, `item`", inline=True)
+	embed.add_field(name="Items", value=f"`backpack`, `shop`, `buy`, `sell`", inline=True)
 	embed.add_field(name="Rewards", value=f"`hourly`, `daily`", inline=True)
 	embed.add_field(name="Fun", value=f"`coinflip`", inline=True)
 	embed.add_field(name="System", value=f"`ping`, `prefix`, `help`", inline=True)
@@ -98,9 +103,9 @@ async def on_command_error(ctx, error):
 		stat_cmd, bp_cmd = ["stats", "user", "bal", "stat"], ["bp", "inventory", "inv", "backpack"]
 		ignored_cases = stat_cmd + bp_cmd
 		if ctx.invoked_with in ignored_cases: return
-		await ctx.send(f"You did not pass in required arguments, here\'s some info and examples on {ctx.invoked_with}")
-		await ctx.send(embed=help_embed_for(ctx.invoked_with))
-		
+		await ctx.send(f"You did not pass in required arguments\n here\'s some info and examples on `{ctx.invoked_with}`")
+		await ctx.send(embed=get_help_embed_for(ctx.invoked_with, get_cmd_data_for(ctx.invoked_with), ctx))
+
 	elif isinstance(error, discord.Forbidden):
 		pass
 	elif isinstance(error, commands.CheckFailure):

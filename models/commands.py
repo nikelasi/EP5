@@ -45,7 +45,7 @@ help_cmd_struct = {
 	("bank"): {
 		"description": "`{p}{cmd}` info\nChecks your bank balance\n\n`{p}{cmd} withdraw <amount>`\nWithdraws <amount> from your bank balance\n\n`{p}{cmd} deposit <amount>`\nDeposits <amount> into your bank balance",
 		"fields": [
-			("Examples", "{p}{cmd} info\n{p}{cmd} wiithdraw 1000\n{p}{cmd} deposit 2500")
+			("Examples", "{p}{cmd} info\n{p}{cmd} withdraw 1000\n{p}{cmd} deposit 2500")
 		]
 	},
 	("cf", "coinflip", "flip"): {
@@ -73,7 +73,9 @@ help_cmd_struct = {
 		]
 	},
 	("backpack", "bp", "inventory", "inv"): {
-		"description": "`{p}{cmd}`\nReturns your backpack of items",
-		"fields": []
+		"description": "`{p}{cmd}`\nCheck your backpack\n\n`{p}{cmd} @User`\nChecks the backpack of @User",
+		"fields": [
+			("Examples", "{p}{cmd}\n{p}{cmd} @User")
+		]
 	}
 }

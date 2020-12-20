@@ -39,11 +39,11 @@ class userdata(commands.Cog):
 		pass
 
 	@commands.command(aliases=["stats", "user", "bal"])
-	async def stat(self, ctx, member: discord.Member):
+	async def stat(self, ctx, member: discord.Member = None):
+		msg = await ctx.send("processing data...")
 		if member:
 			if member.bot:
-				return await ctx.send(f"Very funny, you know <@!{member.id}> is a bot.")
-			msg = await ctx.send("processing data...")
+				return await msg.edit(content=f"Very funny, you know <@!{member.id}> is a bot.")
 			user = db.user_db.fetch_user(member.id, ctx.guild.id)
 			if not user:
 				return await msg.edit(content=f"<@!{member.id}> exists? Never heard of them, hold on.\nPlease try again later")
@@ -59,7 +59,21 @@ class userdata(commands.Cog):
 			embed.set_author(name=f"{member}", icon_url=member.avatar_url)
 			return await msg.edit(content=None, embed=embed)
 
-		return await ctx.send(f"Good job lmao. You broke the system")
+		#return await ctx.send(f"Good job lmao. You broke the system")
+		user = db.user_db.fetch_user(ctx.author.id, ctx.guild.id)
+		if not user:
+			return await msg.edit(content=f"It appears that you don\'t exist to me. (No offense)\nPlease try again later")
+		data_parser = UserDataParser(user)
+		await msg.edit(content="fetching user data...")
+
+		embed = discord.Embed(
+			colour=embed_colour
+		)
+
+		embed.add_field(name="User", value=f"Balance: **{data_parser.get_user_money()} Σ**")
+		embed.add_field(name="Others", value=f"ServerID: `{data_parser.get_id()[0]}`\nUserID: `{data_parser.get_id()[1]}`")
+		embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url)
+		return await msg.edit(content=None, embed=embed)
 
 	@stat.error
 	async def stat_error(self, ctx, error):
@@ -76,7 +90,7 @@ class userdata(commands.Cog):
 			)
 
 			embed.add_field(name="User", value=f"Balance: **{data_parser.get_user_money()} Σ**")
-			embed.add_field(name="Others", value=f"ServerID: `{data_parser.get_id()[0]}`\nUserID: `{data_parser.get_id()[1]}`")
+			embed.add_field(name="Others", value=f"ServderID: `{data_parser.get_id()[0]}`\nUserID: `{data_parser.get_id()[1]}`")
 			embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url)
 			return await msg.edit(content=None, embed=embed)
 

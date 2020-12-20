@@ -48,6 +48,12 @@ class ItemCogChecks:
 
 		return count, item_name, item_data, user, user_parser, user_id, amount_owned, supply, max_amount, item_cost, cumul_cost, user_money
 
+class CustomCommandContext:
+	def __init__(self, author, guild, message, requester):
+		self.author = author
+		self.guild = guild
+		self.message = message
+		self.requester = requester
 
 def item_embed_content_of(ctx, item_data, footer_info=None, backpack=None):
 	embed = discord.Embed(
@@ -57,7 +63,7 @@ def item_embed_content_of(ctx, item_data, footer_info=None, backpack=None):
 	)
 
 	if not backpack: embed.set_author(url=ctx.guild.icon_url, name=f"{ctx.guild.name}\'s Items")
-	elif backpack: embed.set_author(url=ctx.author.icon_url, name=f"{ctx.author.name}\'s {backpack}")
+	if backpack: embed.set_author(url=ctx.author.avatar_url, name=f"{ctx.author}\'s {backpack}")
 	embed.add_field(name="Cost", value=f"**{item_data['cost']} Σ**", inline=True)
 
 	if f"{ctx.guild.id}-{ctx.author.id}" in item_data["owners"]:
@@ -76,11 +82,61 @@ def item_embed_content_of(ctx, item_data, footer_info=None, backpack=None):
 
 	return embed
 
+async def paginated_menu_for_items(self, msg, ctx, items, backpack=None):
+	items_count = len(items)
+	cur_item_no = 1
+	if backpack:
+		await msg.edit(content=None, embed=item_embed_content_of(ctx, items[cur_item_no-1], (cur_item_no, items_count), backpack))
+	else:
+		await msg.edit(content=None, embed=item_embed_content_of(ctx, items[cur_item_no-1], (cur_item_no, items_count)))
+
+	reactions = ["⏮️", "◀️", "▶️", "⏭️"]
+	for reaction in reactions: await msg.add_reaction(reaction)
+
+	check = None
+
+	if type(ctx) is CustomCommandContext:
+		def check(reaction, user):
+			return user == ctx.requester
+	else:
+		def check(reaction, user):
+			return user == ctx.author
+
+	while True:
+		try:
+			reaction, user = await self.client.wait_for("reaction_add", timeout=60, check=check)
+
+			if str(reaction.emoji) == "▶️" and cur_item_no != items_count:
+				cur_item_no += 1
+
+			elif str(reaction.emoji) == "◀️" and cur_item_no > 1:
+				cur_item_no -= 1
+
+			elif str(reaction.emoji) == "⏮️":
+				cur_item_no = 1
+
+			elif str(reaction.emoji) == "⏭️":
+				cur_item_no = items_count
+
+			if str(reaction.emoji) in reactions:
+				if backpack:
+					await msg.edit(content=None, embed=item_embed_content_of(ctx, items[cur_item_no-1], (cur_item_no, items_count), backpack))
+				else:
+					await msg.edit(content=None, embed=item_embed_content_of(ctx, items[cur_item_no-1], (cur_item_no, items_count)))
+			await msg.remove_reaction(reaction, user)
+
+		except asyncio.TimeoutError:
+			await ctx.message.delete()
+			await msg.delete()
+			break
+	return
+
 class items_cmd(commands.Cog):
 	def __init__(self, client):
 		self.client = client
 
 	@commands.command(aliases=["purchase"])
+	@commands.cooldown(1, 2, commands.BucketType.user)
 	async def buy(self, ctx, count=None, *, item_name=None):
 
 		ctx.invoked_with = ctx.invoked_with.lower()
@@ -121,6 +177,7 @@ class items_cmd(commands.Cog):
 		pass
 
 	@commands.command(aliases=["refund"])
+	@commands.cooldown(1, 2, commands.BucketType.user)
 	async def sell(self, ctx, count=None, *, item_name=None):
 
 		ctx.invoked_with = ctx.invoked_with.lower()
@@ -134,7 +191,7 @@ class items_cmd(commands.Cog):
 		new_item_count = amount_owned - count
 		new_user_money = user_money + cumul_cost
 		new_supply_count = None
-		if amount_owned < count: return await msg.edit(content=f"You only have `{amount_owned}` of `{item_name}`\nYou cannot possibly {ctx.invoked_with} `{count}` of `{item_name}`\nThe maximum amount of `{item_name}` you can sell is `{amount_owned}`")
+		if amount_owned < count: return await msg.edit(content=f"You only have `{amount_owned}` of `{item_name}`\nYou cannot possibly {ctx.invoked_with} `{count}` of `{item_name}`\nThe maximum amount of `{item_name}` you can {ctx.invoked_with} is `{amount_owned}`")
 		if supply: new_supply_count = supply + count
 
 		item_result = None
@@ -175,47 +232,12 @@ class items_cmd(commands.Cog):
 
 		if cmdtype.lower() in ["list"]:
 
-			items_count = len(items)
-			cur_item_no = 1
-			await msg.edit(content=None, embed=item_embed_content_of(ctx, items[cur_item_no-1], (cur_item_no, items_count)))
-			# getting the message object for editing and reacting
-
-			reactions = ["⏮️", "◀️", "▶️", "⏭️"]
-			for reaction in reactions: await msg.add_reaction(reaction)
-
-			def check(reaction, user):
-				return user == ctx.author
-
-			while True:
-				try:
-					reaction, user = await self.client.wait_for("reaction_add", timeout=60, check=check)
-
-					if str(reaction.emoji) == "▶️" and cur_item_no != items_count:
-						cur_item_no += 1
-
-					elif str(reaction.emoji) == "◀️" and cur_item_no > 1:
-						cur_item_no -= 1
-
-					elif str(reaction.emoji) == "⏮️":
-						cur_item_no = 1
-
-					elif str(reaction.emoji) == "⏭️":
-						cur_item_no = items_count
-
-					if str(reaction.emoji) in reactions:
-						await msg.edit(content=None, embed=item_embed_content_of(ctx, items[cur_item_no-1], (cur_item_no, items_count)))
-					await msg.remove_reaction(reaction, user)
-
-				except asyncio.TimeoutError:
-					await ctx.message.delete()
-					await msg.delete()
-					break
-			return
+			return await paginated_menu_for_items(self, msg, ctx, items)
 
 		await msg.edit(content=f"checking item...")
 		if not item_name: return await msg.edit(content=f"Please specify the name of the item, try again")
 		item_data = list(filter(lambda x: x if ((x["name"] == str(item_name)) and (x["server_id"] == str(ctx.guild.id))) else False, items))
-		if not bool(len(item_data)): return await msg.edit(content=f"`{item_name}` does not exist, check `{ctx.prefix}item list` for a list of items")
+		if not bool(len(item_data)): return await msg.edit(content=f"`{item_name}` does not exist, check `{ctx.prefix}{ctx.invoked_with} list` for a list of items")
 		item_data = item_data[0]
 
 		if cmdtype.lower() in ["info"]: return await msg.edit(content=None, embed=item_embed_content_of(ctx, item_data))
@@ -226,21 +248,21 @@ class items_cmd(commands.Cog):
 		pass
 
 	@commands.command(aliases=["bp", "inventory", "inv"])
-	async def backpack(self, ctx):
-
+	async def backpack(self, ctx, member: discord.Member=None):
+		ctx.invoked_with = ctx.invoked_with.lower()
+		backpack = "Inventory" if ctx.invoked_with in ["inv", "inventory"] else "Backpack"
 		msg = await ctx.send("fetching items...")
+		if member:
+			if member.bot:
+				return await msg.edit(content=f"Very funny, you know <@!{member.id}> is a bot.")
+			items = db.items_db.fetch_user_items(f"{ctx.guild.id}-{member.id}")
+			if not bool(len(items)): return await msg.edit(content=f"They appear to have nothing in their backpack!")
+			context_for_member = CustomCommandContext(member, ctx.guild, ctx.message, ctx.author)
+			return await paginated_menu_for_items(self, msg, context_for_member, items, backpack=backpack)
+
 		items = db.items_db.fetch_user_items(f"{ctx.guild.id}-{ctx.author.id}")
 		if not bool(len(items)): return await msg.edit(content=f"You appear to have nothing in your backpack!")
-
-		formatted_items = map(lambda x: f"**{x['name']}** (x{x['owners'][f'{ctx.guild.id}-{ctx.author.id}']})", items)
-		text = '\n'.join(formatted_items)
-		embed = discord.Embed(
-			title=f"Backpack",
-			description=text,
-			colour=embed_colour
-		)
-		embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url)
-		return await msg.edit(content=None, embed=embed)
+		return await paginated_menu_for_items(self, msg, ctx, items, backpack=backpack)
 
 	@backpack.error
 	async def backpack_error(self, ctx, error):
