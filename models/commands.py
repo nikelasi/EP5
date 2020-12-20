@@ -55,13 +55,24 @@ help_cmd_struct = {
 		]
 	},
 	("item", "shop"): {
-		"description": "`{p}{cmd} list`\nLists the items available\n\n`{p}{cmd} info <item-name>`\nReturns more info on <item-name>\n\n`{p}{cmd} <buy/sell> <item-name>`\nBuys/Sells 1 of <item-name>\n\n`{p}{cmd} <buy/sell> <item-name> <count>`\nBuys/Sells <count> of <item-name>",
+		"description": "`{p}{cmd} list` or `{p}{cmd}`\nLists the items available\n\n`{p}{cmd} info <item-name>`\nReturns more info on <item-name>",
 		"fields": [
-			("Examples", "{p}{cmd} list\n{p}{cmd} buy Item\n{p}{cmd} sell Item 10\n{p}{cmd} info Item"),
-			("Important", "If the item includes spaces, you must do double quotes!\nFor example, if it is `Long Long Item Name`, you type \"Long Long Item Name\" instead.")
+			("Examples", "{p}{cmd}\n{p}{cmd} list\n{p}{cmd} info Item")
 		]
 	},
-	("backpack", "bp"): {
+	("sell", "refund"): {
+		"description": "`{p}{cmd} <count> <item-name>`\nSells <count> of <item-name>, you only get a refund of 80%",
+		"fields": [
+			("Examples", "{p}{cmd} 1 Item\n{p}{cmd} 10 GreatItem"),
+		]
+	},
+	("buy", "purchase"): {
+		"description": "`{p}{cmd} <count> <item-name>`\nBuys <count> of <item-name>",
+		"fields": [
+			("Examples", "{p}{cmd} 1 Item\n{p}{cmd} 10 GreatItem"),
+		]
+	},
+	("backpack", "bp", "inventory", "inv"): {
 		"description": "`{p}{cmd}`\nReturns your backpack of items",
 		"fields": []
 	}

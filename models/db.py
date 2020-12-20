@@ -107,6 +107,9 @@ class ItemsData:
 	def fetch_user_items(self, user_id):
 		return list(self.db.find({f"owners.{user_id}": {"$exists": True}}))
 
+	def fetch_item_named(self, item_name, guild_id):
+		return self.db.find_one({"server_id": f"{guild_id}", "name": item_name})
+
 	def set_items_of(self, guild_id, user_id, item_name, new_item_count, new_supply_count):
 
 		fields = {f"owners.{user_id}": new_item_count}

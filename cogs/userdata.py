@@ -36,8 +36,7 @@ class userdata(commands.Cog):
 
 	@leaderboard.error
 	async def leaderboard_error(self, ctx, error):
-		if isinstance(error, commands.MissingRequiredArgument):
-			await ctx.send(f"An easter egg! Nice")
+		pass
 
 	@commands.command(aliases=["stats", "user", "bal"])
 	async def stat(self, ctx, member: discord.Member):

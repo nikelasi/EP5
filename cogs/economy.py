@@ -52,8 +52,7 @@ class economy(commands.Cog):
 
 	@pay.error
 	async def pay_error(self, ctx, error):
-		if isinstance(error, commands.MissingRequiredArgument):
-			await ctx.send(f"Please fill in the required arguments! Check `{ctx.prefix}help pay`")
+		pass
 
 	@commands.command()
 	@commands.cooldown(1, 2, commands.BucketType.user)
@@ -133,8 +132,7 @@ class economy(commands.Cog):
 
 	@bank.error
 	async def bank_error(self, ctx, error):
-		if isinstance(error, commands.MissingRequiredArgument):
-			await ctx.send(f"Please pass in all required arguments, check `{ctx.prefix}help bank` for more info.")
+		pass
 
 def setup(client):
 	client.add_cog(economy(client))

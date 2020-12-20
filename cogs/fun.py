@@ -67,8 +67,7 @@ class fun(commands.Cog):
 
 	@coinflip.error
 	async def coinflip_error(self, ctx, error):
-		if isinstance(error, commands.MissingRequiredArgument):
-			await ctx.send(f"please pass in all the required arguments, check `{ctx.prefix}help coinflip` for more info")
+		pass
 
 def setup(client):
 	client.add_cog(fun(client))

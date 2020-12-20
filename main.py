@@ -14,34 +14,37 @@ client.remove_command('help')
 def format_help_string(text, p, cmd):
 	return text.replace('{p}', f'{p}').replace('{cmd}', f'{cmd}')
 
+def help_embed_for(cmd):
+
+	cmd_data = None
+	for aliases, data in help_cmd_struct.items():
+		cmd_data = (data, aliases) if cmd in aliases else None
+		if cmd_data: break
+	if not cmd_data: return await msg.edit(content=f"Command `{cmd}` does not exist!")
+
+	embed = discord.Embed(
+		title=f"**Command:** `{cmd}`",
+		description=f"{format_help_string(cmd_data[0]['description'], ctx.prefix, cmd)}",
+		colour=embed_colour
+	)
+
+	for name, value in cmd_data[0]["fields"]:
+		embed.add_field(name=f"{format_help_string(name, ctx.prefix, cmd)}", value=f"{format_help_string(value, ctx.prefix, cmd)}", inline=True)
+
+	if type(cmd_data[1]) != str:
+		aliases = list(cmd_data[1])
+		aliases.remove(cmd)
+		aliases = map(lambda x: f"`{x}`", aliases)
+		embed.add_field(name="Aliases", value=f"{' '.join(aliases)}", inline=True)
+
+	return embed
+
 @client.command()
 async def help(ctx, cmd=None):
 	msg = await ctx.send(f"fetching command data...")
 	if cmd:
 		cmd = cmd.lower()
-		cmd_data = None
-
-		for aliases, data in help_cmd_struct.items():
-			cmd_data = (data, aliases) if cmd in aliases else None
-			if cmd_data: break
-		if not cmd_data: return await msg.edit(content=f"Command `{cmd}` does not exist!")
-
-		embed = discord.Embed(
-			title=f"**Command:** `{cmd}`",
-			description=f"{format_help_string(cmd_data[0]['description'], ctx.prefix, cmd)}",
-			colour=embed_colour
-		)
-
-		for name, value in cmd_data[0]["fields"]:
-			embed.add_field(name=f"{format_help_string(name, ctx.prefix, cmd)}", value=f"{format_help_string(value, ctx.prefix, cmd)}", inline=True)
-
-		if type(cmd_data[1]) != str:
-			aliases = list(cmd_data[1])
-			aliases.remove(cmd)
-			aliases = map(lambda x: f"`{x}`", aliases)
-			embed.add_field(name="Aliases", value=f"{' '.join(aliases)}", inline=True)
-
-		return await msg.edit(content=None, embed=embed)
+		return await msg.edit(content=None, embed=help_embed_for(cmd))
 
 	embed = discord.Embed(
 		title=f"**Commands**",
@@ -91,7 +94,13 @@ async def on_command_error(ctx, error):
 	if isinstance(error, commands.CommandNotFound):
 		await ctx.send(f'Invalid command, try `{ctx.prefix}help` for a list of commands.')
 	elif isinstance(error, commands.MissingRequiredArgument):
-		pass
+		ctx.invoked_with = ctx.invoked_with.lower()
+		stat_cmd, bp_cmd = ["stats", "user", "bal", "stat"], ["bp", "inventory", "inv", "backpack"]
+		ignored_cases = stat_cmd + bp_cmd
+		if ctx.invoked_with in ignored_cases: return
+		await ctx.send(f"You did not pass in required arguments, here\'s some info and examples on {ctx.invoked_with}")
+		await ctx.send(embed=help_embed_for(ctx.invoked_with))
+		
 	elif isinstance(error, discord.Forbidden):
 		pass
 	elif isinstance(error, commands.CheckFailure):
