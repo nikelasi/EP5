@@ -77,22 +77,7 @@ class userdata(commands.Cog):
 
 	@stat.error
 	async def stat_error(self, ctx, error):
-		if isinstance(error, commands.MissingRequiredArgument):
-			msg = await ctx.send("processing data...")
-			user = db.user_db.fetch_user(ctx.author.id, ctx.guild.id)
-			if not user:
-				return await msg.edit(content=f"It appears that you don\'t exist to me. (No offense)\nPlease try again later")
-			data_parser = UserDataParser(user)
-			await msg.edit(content="fetching user data...")
-
-			embed = discord.Embed(
-				colour=embed_colour
-			)
-
-			embed.add_field(name="User", value=f"Balance: **{data_parser.get_user_money()} Σ**")
-			embed.add_field(name="Others", value=f"ServderID: `{data_parser.get_id()[0]}`\nUserID: `{data_parser.get_id()[1]}`")
-			embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url)
-			return await msg.edit(content=None, embed=embed)
+		pass
 
 
 def setup(client):

@@ -1,5 +1,6 @@
 import os
 import pymongo
+import random
 
 class PrefixData:
 	"""Class to handle prefix data"""
@@ -127,11 +128,29 @@ class ItemsData:
 			"new_count": new_item_count
 		}
 
-	def remove_item_from_owner(self, guild_id, user_id, item_name):
+	def update_items_price(self, guild_id):
+		results = list(self.db.find(
+			{"server_id": f"{guild_id}"}
+		))
+		for result in results:
+			min_multipler, max_multiplier = result['multipliers']
+			multiplier = random.randint(int(min_multipler), int(max_multiplier))
+			new_cost = round(result['avg_price'] * (multiplier/100))
+			self.db.update_one(
+				{"name": result["name"], "server_id": f"{guild_id}"},
+				{"$set": {f"cost": new_cost}}
+			)
+			print(f"Updated `{result['name']}` cost from {result['cost']} to {new_cost}")
+
+
+	def remove_item_from_owner(self, guild_id, user_id, item_name, new_supply_count):
+
+		update_query = {"$unset": {f"owners.{user_id}": 0}}
+		if new_supply_count: update_query["$set"] = {"supply": new_supply_count}
 
 		result = self.db.update_one(
 			{"name": item_name, "server_id": f"{guild_id}"},
-			{"$unset": {f"owners.{user_id}": 0}}
+			update_query
 		)
 		success = (bool(result.matched_count) and bool(result.modified_count))
 		return {

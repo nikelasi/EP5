@@ -1,4 +1,4 @@
-import os, json, time, asyncio #pylint: disable=W0611
+import os, json, time, asyncio, random, threading #pylint: disable=W0611
 import discord
 from discord.ext import commands
 from models.db import db
@@ -11,45 +11,73 @@ in_development = False
 client = commands.Bot(command_prefix=db.prefix_db.get_prefix, case_insensitive=True)
 client.remove_command('help')
 
-def format_help_string(text, p, cmd):
-	return text.replace('{p}', f'{p}').replace('{cmd}', f'{cmd}')
+class ItemsUpdateLoop(threading.Thread):
+	def __init__(self, seconds, guild_ids):
+		super().__init__()
+		self.delay = seconds
+		self.guild_ids = guild_ids
+		self.is_done = False
 
-def get_cmd_data_for(cmd):
+	def done(self):
+		self.is_done = True
 
-	cmd_data = None
-	for aliases, data in help_cmd_struct.items():
-		cmd_data = (data, aliases) if cmd in aliases else None
-		if cmd_data:
-			return cmd_data
-	return cmd_data
+	def run(self):
+		while not self.is_done:
+			time.sleep(self.delay)
+			for guild_id in self.guild_ids:
+				try:
+					db.items_db.update_items_price(guild_id)
+				except Exception:
+					pass
 
-def get_help_embed_for(cmd, cmd_data, ctx):
+		print("thread finished")
 
-	embed = discord.Embed(
-		title=f"**Command:** `{cmd}`",
-		description=f"{format_help_string(cmd_data[0]['description'], ctx.prefix, cmd)}",
-		colour=embed_colour
-	)
+class MainExtraMethods:
+	def __init__(self):
+		pass
 
-	for name, value in cmd_data[0]["fields"]:
-		embed.add_field(name=f"{format_help_string(name, ctx.prefix, cmd)}", value=f"{format_help_string(value, ctx.prefix, cmd)}", inline=True)
+	@staticmethod
+	def format_help_string(text, p, cmd):
+		return text.replace('{p}', f'{p}').replace('{cmd}', f'{cmd}')
 
-	if type(cmd_data[1]) != str:
-		aliases = list(cmd_data[1])
-		aliases.remove(cmd)
-		aliases = map(lambda x: f"`{x}`", aliases)
-		embed.add_field(name="Aliases", value=f"{' '.join(aliases)}", inline=True)
+	@staticmethod
+	def get_cmd_data_for(cmd):
 
-	return embed
+		cmd_data = None
+		for aliases, data in help_cmd_struct.items():
+			cmd_data = (data, aliases) if cmd in aliases else None
+			if cmd_data:
+				return cmd_data
+		return cmd_data
+
+	@staticmethod	
+	def get_help_embed_for(cmd, cmd_data, ctx):
+
+		embed = discord.Embed(
+			title=f"**Command:** `{cmd}`",
+			description=f"{MainExtraMethods.format_help_string(cmd_data[0]['description'], ctx.prefix, cmd)}",
+			colour=embed_colour
+		)
+
+		for name, value in cmd_data[0]["fields"]:
+			embed.add_field(name=f"{MainExtraMethods.format_help_string(name, ctx.prefix, cmd)}", value=f"{MainExtraMethods.format_help_string(value, ctx.prefix, cmd)}", inline=True)
+
+		if type(cmd_data[1]) != str:
+			aliases = list(cmd_data[1])
+			aliases.remove(cmd)
+			aliases = map(lambda x: f"`{x}`", aliases)
+			embed.add_field(name="Aliases", value=f"{' '.join(aliases)}", inline=True)
+
+		return embed
 
 @client.command()
 async def help(ctx, cmd=None):
 	msg = await ctx.send(f"fetching command data...")
 	if cmd:
 		cmd = cmd.lower()
-		cmd_data = get_cmd_data_for(cmd)
+		cmd_data = MainExtraMethods.get_cmd_data_for(cmd)
 		if not cmd_data: return await msg.edit(content=f"Command `{cmd}` does not exist!")
-		return await msg.edit(content=None, embed=get_help_embed_for(cmd, cmd_data, ctx))
+		return await msg.edit(content=None, embed=MainExtraMethods.get_help_embed_for(cmd, cmd_data, ctx))
 
 	embed = discord.Embed(
 		title=f"**Commands**",
@@ -74,6 +102,7 @@ async def on_message(message):
 	if in_development and message.channel.id not in [673402525969547285]:
 		return
 
+
 	if message.content.strip() == "<@!784729572620894228>":
 		await message.channel.send(
 			f"My prefix is `{db.prefix_db.get_prefix(client, message)}`\ndo `{db.prefix_db.get_prefix(client, message)}help` for a list of commands!"
@@ -86,6 +115,10 @@ async def on_message(message):
 
 @client.event
 async def on_ready():
+	guild_ids = [guild.id for guild in list(client.guilds)]
+	iul = ItemsUpdateLoop(60*15, guild_ids)
+	print("ItemsUpdateLoop started")
+	iul.start()
 	print('FyreDiscord is dedn\'t')
 	await client.change_presence(
 		activity=discord.Activity(
@@ -104,7 +137,7 @@ async def on_command_error(ctx, error):
 		ignored_cases = stat_cmd + bp_cmd
 		if ctx.invoked_with in ignored_cases: return
 		await ctx.send(f"You did not pass in required arguments\n here\'s some info and examples on `{ctx.invoked_with}`")
-		await ctx.send(embed=get_help_embed_for(ctx.invoked_with, get_cmd_data_for(ctx.invoked_with), ctx))
+		await ctx.send(embed=MainExtraMethods.get_help_embed_for(ctx.invoked_with, MainExtraMethods.get_cmd_data_for(ctx.invoked_with), ctx))
 
 	elif isinstance(error, discord.Forbidden):
 		pass
