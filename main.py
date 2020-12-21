@@ -4,6 +4,7 @@ from discord.ext import commands
 from models.db import db
 from models.commands import help_cmd_struct
 from models.constants import embed_colour
+from models.parser import ProcessingTools
 
 owner_ids = [593735027121061889, 348307478808756224]
 in_development = False
@@ -17,20 +18,24 @@ class ItemsUpdateLoop(threading.Thread):
 		self.delay = seconds
 		self.guild_ids = guild_ids
 		self.is_done = False
+		self.last_updated = 0
 
 	def done(self):
 		self.is_done = True
 
 	def run(self):
 		while not self.is_done:
+			self.last_updated = time.time()
 			time.sleep(self.delay)
 			for guild_id in self.guild_ids:
 				try:
-					db.items_db.update_items_price(guild_id)
+					threading.Thread(target=db.items_db.update_items_price, kwargs={'guild_id': guild_id}).start()
 				except Exception:
 					pass
 
 		print("thread finished")
+
+iul = None
 
 class MainExtraMethods:
 	def __init__(self):
@@ -88,9 +93,10 @@ async def help(ctx, cmd=None):
 	#embed.set_author(name="Commands", icon_url=client.user.avatar_url)
 	embed.add_field(name="User", value=f"`stats`, `leaderboard`", inline=True)
 	embed.add_field(name="Economy", value=f"`pay`, `bank`", inline=True)
-	embed.add_field(name="Items", value=f"`backpack`, `shop`, `buy`, `sell`", inline=True)
+	embed.add_field(name="Items", value=f"`backpack`, `shop`, `buy`, `sell`, `sc`, `gift`", inline=True)
 	embed.add_field(name="Rewards", value=f"`hourly`, `daily`", inline=True)
-	embed.add_field(name="Fun", value=f"`coinflip`", inline=True)
+	embed.add_field(name="Fun", value=f"`coinflip`, `would_you_rather`", inline=True)
+	embed.add_field(name="Others", value=f"`collections`", inline=True)
 	embed.add_field(name="System", value=f"`ping`, `prefix`, `help`", inline=True)
 	return await msg.edit(content=None, embed=embed)
 
@@ -115,6 +121,7 @@ async def on_message(message):
 
 @client.event
 async def on_ready():
+	global iul
 	guild_ids = [guild.id for guild in list(client.guilds)]
 	iul = ItemsUpdateLoop(60*15, guild_ids)
 	print("ItemsUpdateLoop started")
@@ -166,6 +173,15 @@ async def prefix(ctx, p):
 	db.prefix_db.set_prefix(ctx.message.guild.id, p)
 	await message.edit(content=f"Prefix have been changed to `{p}`")
 
+@client.command(aliases=["stock_change", "pc", "price_change"])
+async def sc(ctx):
+	msg = await ctx.send(f"checking time...")
+	last_updated = int(iul.last_updated)
+	next_updated = last_updated + 60*15
+	time_to_update = round(next_updated - int(time.time()))
+	formatted_time = ProcessingTools.seconds_to_time(time_to_update)
+	return await msg.edit(content=f"`{formatted_time}` to next price change")
+
 @client.command()
 async def ping(ctx, destination=None):
 	if destination in [None, "bot", "self"]:
@@ -213,8 +229,6 @@ async def prefix_error(ctx, error):
 		await ctx.send("I require permission. I am not allowed to change my prefix yet so...")
 	elif isinstance(error, commands.CheckFailure):
 		await ctx.send("You appear to be unqualified or not have the permission.\nYou need to be admin to change my prefix")
-	elif isinstance(error, commands.MissingRequiredArgument):
-		await ctx.send(f"Setting random 11-digit long prefix...\nGIVE ME A PREFIX GENIUS\nExample:`{ctx.prefix}prefix !` will change my prefix to `!`")
 
 @ping.error
 async def ping_error(ctx, error):

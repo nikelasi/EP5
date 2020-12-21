@@ -2,3 +2,5 @@ discord
 asyncio
 pymongo
 dnspython
+bs4
+requests

@@ -22,7 +22,11 @@ class ItemCogChecks:
 		try:
 			count = int(count)
 		except ValueError:
-			return f"How does one {ctx.invoked_with} `{count}` of `{item_name}`? Try again"
+			if item_name == None:
+				item_name = count
+			else:
+				item_name = f"{count} {item_name}"
+			count = 1
 		if count == 0: return f"Come on! Don\'t try to waste my resources"
 		if count < 0: return f"How do you even {ctx.invoked_with} negative amounts of something"
 		if not item_name: return f"Please specify the name of the item, try again\nCheck `{ctx.prefix}help {ctx.invoked_with}` for more info"
@@ -63,8 +67,8 @@ class ItemCogChecks:
 			colour=embed_colour
 		)
 
-		if not backpack: embed.set_author(url=ctx.guild.icon_url, name=f"{ctx.guild.name}\'s Items")
-		if backpack: embed.set_author(url=ctx.author.avatar_url, name=f"{ctx.author}\'s {backpack}")
+		if not backpack: embed.set_author(icon_url=ctx.guild.icon_url, name=f"{ctx.guild.name}\'s Items")
+		if backpack: embed.set_author(icon_url=ctx.author.avatar_url, name=f"{ctx.author}\'s {backpack}")
 		embed.add_field(name="Cost", value=f"**{item_data['cost']} Σ**", inline=True)
 
 		if f"{ctx.guild.id}-{ctx.author.id}" in item_data["owners"]:
@@ -78,9 +82,13 @@ class ItemCogChecks:
 			else:
 				embed.add_field(name="Supply", value=f"{item_data['supply']} left", inline=True)
 
+		embed.add_field(name="Base", value=f"**{item_data['avg_price']} Σ**", inline=True)
+		embed.add_field(name="Min", value=f"{item_data['multipliers'][0]}%", inline=True)
+		embed.add_field(name="Max", value=f"{item_data['multipliers'][1]}%", inline=True)
 		if footer_info:
 			item_no, items_no = footer_info
-			embed.set_footer(text=f"Item {item_no} of {items_no}")
+			if type(ctx) is CustomCommandContext: embed.set_footer(text=f"Item {item_no} of {items_no} | Requested by {ctx.requester}")
+			else: embed.set_footer(text=f"Item {item_no} of {items_no} | Requested by {ctx.author}")
 
 		return embed
 
@@ -100,10 +108,10 @@ class ItemCogChecks:
 
 		if type(ctx) is CustomCommandContext:
 			def check(reaction, user):
-				return user == ctx.requester
+				return user == ctx.requester and reaction.message.id == msg.id
 		else:
 			def check(reaction, user):
-				return user == ctx.author
+				return user == ctx.author and reaction.message.id == msg.id
 
 		while True:
 			try:
@@ -129,14 +137,81 @@ class ItemCogChecks:
 				await msg.remove_reaction(reaction, user)
 
 			except asyncio.TimeoutError:
-				await ctx.message.delete()
-				await msg.delete()
+				await msg.clear_reactions()
 				break
 		return
 
 class items_cmd(commands.Cog):
 	def __init__(self, client):
 		self.client = client
+
+	@commands.command()
+	@commands.cooldown(1, 2, commands.BucketType.user)
+	async def gift(self, ctx, receiver: discord.Member, amount=None, *, item_name=None):
+
+		msg = await ctx.send("processing...")
+		if not amount: return await msg.edit(content=f"Please specify the amount of items you want to gift!\nCheck `{ctx.prefix}help gift` for more info")
+		try:
+			amount = int(amount)
+		except ValueError:
+			if item_name == None:
+				item_name = amount
+			else:
+				item_name = f"{amount} {item_name}"
+			amount = 1
+
+		sender = ctx.author
+		sender_id, receiver_id = sender.id, receiver.id
+		if not item_name: return await msg.edit(content=f"Please specify the name of the item, try again\nCheck `{ctx.prefix}help gift` for more info")
+		if receiver.bot: return await msg.edit(content=f"Seriously? You expect a bot to be registered in my database?")
+		if sender.id == receiver.id: return await msg.edit(content="What\'s the point of gifting to yourself?\nStop wasting my resources!")
+		if amount == 0: return await msg.edit(content="Scram! Stop wasting my resources to do a pointless task!")
+		if amount < 0: return await msg.edit(content=f"You think you are funny?\nGifting negative items?")
+
+		await msg.edit(content=f"checking item...")
+		item = db.items_db.fetch_item_named(item_name, ctx.guild.id)
+		if not item: return await msg.edit(content=f"`{item_name}` isn\'t an available item, try again later!\nCheck `{ctx.prefix}backpack` to see what you can gift!")
+
+		await msg.edit(content=f"processing data...")
+		try: sender_amount_owned = item["owners"][f"{ctx.guild.id}-{sender_id}"]
+		except KeyError: sender_amount_owned = 0
+		try: receiver_amount_owned = item["owners"][f"{ctx.guild.id}-{receiver_id}"]
+		except KeyError: receiver_amount_owned = 0
+		max_amount = item["max"]
+		new_receiver_amount_owned = receiver_amount_owned + amount
+		new_sender_amount_owned = sender_amount_owned - amount 
+
+		if sender_amount_owned == 0: return await msg.edit(content=f"You don\'t even own any of that and you are trying to gift it")
+		if receiver_amount_owned == max_amount: return await msg.edit(content="That user already owns the maximum amount of that item, you can\'t give them more")
+		if amount > sender_amount_owned: return await msg.edit(content=f"You only have `{sender_amount_owned}` of `{item_name}`\nYou cannot possibly {ctx.invoked_with} `{amount}` of `{item_name}`")
+		if new_receiver_amount_owned > max_amount: return await msg.edit(content=f"If you were to give that user `{amount}` of `{item_name}`,\nthey would exceed the maximum amount of `{item_name}` they can own")
+
+		await msg.edit(content="processing gift...")
+
+		update_fields, set_fields, unset_fields = {}, {}, {}
+		if new_sender_amount_owned == 0: unset_fields[f"owners.{ctx.guild.id}-{sender_id}"] = 0
+		else: set_fields[f"owners.{ctx.guild.id}-{sender_id}"] = new_sender_amount_owned
+		set_fields[f"owners.{ctx.guild.id}-{receiver_id}"] = new_receiver_amount_owned
+		if unset_fields != {}: update_fields["$unset"] = unset_fields
+		update_fields["$set"] = set_fields
+
+		update_result = db.items_db.db.update_one(
+			{"server_id": f"{ctx.guild.id}", "name": f"{item_name}"},
+			update_fields
+		)
+		success = bool(update_result.matched_count) and bool(update_result.modified_count)
+		if not success: return await msg.edit(content=f"Something went wrong while processing the gift, try again later")
+		
+		embed = discord.Embed(
+			description=f"You have sent `{amount}` of `{item_name}` to <@!{receiver.id}>!\n<@!{sender.id}>\'s `{item_name}` count: {new_sender_amount_owned}\n<@!{receiver.id}>\'s `{item_name}` count: {new_receiver_amount_owned}",
+			colour=embed_colour
+		)
+		embed.set_author(name=f"Gift success")
+		return await msg.edit(content=None, embed=embed)
+
+	@gift.error
+	async def gift_error(self, ctx, error):
+		pass
 
 	@commands.command(aliases=["purchase"])
 	@commands.cooldown(1, 2, commands.BucketType.user)

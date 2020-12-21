@@ -43,7 +43,7 @@ help_cmd_struct = {
 		]
 	},
 	("bank"): {
-		"description": "`{p}{cmd}` info\nChecks your bank balance\n\n`{p}{cmd} withdraw <amount>`\nWithdraws <amount> from your bank balance\n\n`{p}{cmd} deposit <amount>`\nDeposits <amount> into your bank balance",
+		"description": "`{p}{cmd} info`\nChecks your bank balance\n\n`{p}{cmd} withdraw <amount>`\nWithdraws <amount> from your bank balance\n\n`{p}{cmd} deposit <amount>`\nDeposits <amount> into your bank balance",
 		"fields": [
 			("Examples", "{p}{cmd} info\n{p}{cmd} withdraw 1000\n{p}{cmd} deposit 2500")
 		]
@@ -61,21 +61,41 @@ help_cmd_struct = {
 		]
 	},
 	("sell", "refund"): {
-		"description": "`{p}{cmd} <count> <item-name>`\nSells <count> of <item-name>, you only get a refund of 80%",
+		"description": "`{p}{cmd} <item-name>`\nSells 1 of <item-name> [80% price]\n\n`{p}{cmd} <count> <item-name>`\nSells <count> of <item-name>, you only get a refund of 80%",
 		"fields": [
-			("Examples", "{p}{cmd} 1 Item\n{p}{cmd} 10 GreatItem"),
+			("Examples", "{p}{cmd} Item\n{p}{cmd} 10 GreatItem"),
 		]
 	},
 	("buy", "purchase"): {
-		"description": "`{p}{cmd} <count> <item-name>`\nBuys <count> of <item-name>",
+		"description": "`{p}{cmd} <item-name>`\nBuys 1 of <item-name>\n\n`{p}{cmd} <count> <item-name>`\nBuys <count> of <item-name>",
 		"fields": [
-			("Examples", "{p}{cmd} 1 Item\n{p}{cmd} 10 GreatItem"),
+			("Examples", "{p}{cmd} Item\n{p}{cmd} 10 GreatItem"),
 		]
 	},
 	("backpack", "bp", "inventory", "inv"): {
 		"description": "`{p}{cmd}`\nCheck your backpack\n\n`{p}{cmd} @User`\nChecks the backpack of @User",
 		"fields": [
 			("Examples", "{p}{cmd}\n{p}{cmd} @User")
+		]
+	},
+	('sc', 'pc', 'stock_change', 'price_change'): {
+		"description": "`{p}{cmd}`\nCheck when the next price change will be",
+		"fields": []
+	},
+	('would_you_rather', 'wyr'): {
+		"description": "`{p}{cmd}`\nReturns a would you rather question and you can get 25~50 if you win!",
+		"fields": []
+	},
+	("frame", "collection", "collections", "frames", "col"): {
+		"description": "`{p}{cmd} list` or `{p}{cmd}`\nLists the collections available to be viewed\n\n`{p}{cmd} view <collection-name>`\nView the collection specified as set of frames",
+		"fields": [
+			("Examples", "{p}{cmd}\n{p}{cmd} list\n{p}{cmd} view collection")
+		]
+	},
+	("gift"): {
+		"description": "`{p}{cmd} @User <item-name>`\nGifts @User 1 of <item-name>\n\n`{p}{cmd} @User <count> <item-name>`\nGifts @User <count> of <item-name>",
+		"fields": [
+			("Examples", "{p}{cmd} @User Item\n{p}{cmd} @User 10 Item")
 		]
 	}
 }

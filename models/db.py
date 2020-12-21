@@ -1,6 +1,7 @@
 import os
 import pymongo
 import random
+import threading
 
 class PrefixData:
 	"""Class to handle prefix data"""
@@ -133,10 +134,14 @@ class ItemsData:
 			{"server_id": f"{guild_id}"}
 		))
 		for result in results:
+			threading.Thread(target=ItemsData.update_item_price_of, kwargs={"result": result, "db": self.db, "guild_id": guild_id}).start()
+
+	@staticmethod
+	def update_item_price_of(result, db, guild_id):
 			min_multipler, max_multiplier = result['multipliers']
 			multiplier = random.randint(int(min_multipler), int(max_multiplier))
 			new_cost = round(result['avg_price'] * (multiplier/100))
-			self.db.update_one(
+			db.update_one(
 				{"name": result["name"], "server_id": f"{guild_id}"},
 				{"$set": {f"cost": new_cost}}
 			)
