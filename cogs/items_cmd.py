@@ -308,6 +308,7 @@ class items_cmd(commands.Cog):
 
 		items = db.items_db.fetch_items_of(ctx.guild.id)
 		if not bool(len(items)): return await msg.edit(content=f"There are no items on this server, try again later")
+		items = list(sorted(items, key=lambda item: item["cost"]))
 
 		if cmdtype.lower() in ["list"]:
 
@@ -335,11 +336,13 @@ class items_cmd(commands.Cog):
 			if member.bot: return await msg.edit(content=f"Very funny, you know <@!{member.id}> is a bot.")
 			items = db.items_db.fetch_user_items(f"{ctx.guild.id}-{member.id}")
 			if not bool(len(items)): return await msg.edit(content=f"They appear to have nothing in their backpack!")
+			items = list(sorted(items, key=lambda item: item["cost"]))
 			context_for_member = CustomCommandContext(member, ctx.guild, ctx.message, ctx.author)
 			return await ItemCogChecks.paginated_menu_for_items(self, msg, context_for_member, items, backpack=backpack)
 
 		items = db.items_db.fetch_user_items(f"{ctx.guild.id}-{ctx.author.id}")
 		if not bool(len(items)): return await msg.edit(content=f"You appear to have nothing in your backpack!")
+		items = list(sorted(items, key=lambda item: item["cost"]))
 		return await ItemCogChecks.paginated_menu_for_items(self, msg, ctx, items, backpack=backpack)
 
 	@backpack.error
