@@ -76,6 +76,57 @@ class fun(commands.Cog):
 	async def coinflip_error(self, ctx, error):
 		pass
 
+	@commands.command(aliases=["roll", "die"])
+	@commands.cooldown(1, 2, commands.BucketType.user)
+	async def dice(self, ctx, guess=None, bet=None):
+
+		msg = await ctx.send("rolling dice...")
+		result = random.randint(1, 6)
+
+		embed = discord.Embed(
+			description=f"1 in 6 chance for rolling any number",
+			colour=embed_colour
+		)
+		embed.set_author(name="Dice")
+		embed.add_field(name="Result", value=f"**{result}**", inline=True)
+		
+		if not guess and not bet: return await msg.edit(content=None, embed=embed)
+		await msg.edit(content="doing checks...")
+
+		try: guess = int(guess)
+		except ValueError: return await msg.edit(content=f"Your guess, `{guess}`, isn\'t a number at all, this is merely a standard dice where you can choose 1 to 6")
+		if not (guess in range(1, 6+1)): return await msg.edit(content=f"Your guess, `{guess}`, is not within 1 to 6, I\'m sure you know how a standard dice work")
+		user_correct = {True: "correct", False: "wrong"}.get(guess == result)
+		embed.description = f"{embed.description}\nYour guess was {user_correct}!"
+		embed.add_field(name="Guess", value=f"**{guess}**", inline=True)
+		if not bet: return await msg.edit(content=None, embed=embed)
+
+		try: bet = int(bet)
+		except ValueError: return await msg.edit(content=f"What does betting `{bet}` even mean? Does `{bet}` look like an integer to you?")
+
+		user = db.user_db.fetch_user(ctx.author.id, ctx.guild.id)
+		if not user: return await msg.edit(content=f"Hmm... somehow you don\'t exist to me, try again later!")
+		user_parser = UserDataParser(user)
+		user_balance = user_parser.get_user_money()
+
+		if bet == 0: return await msg.edit(content="If you want to bet nothing, just don\'t include the number next time")
+		if bet < 0: return await msg.edit(content=f"No no, you think I forgot about checking it?")
+		if user_balance < bet: return await msg.edit(content=f"Your user balance is **{user_balance} Σ**!\nYou cannot possibly bet more than you have!")
+
+		new_balance, win_indicator = {"correct": (user_balance+bet, f"\nYou won **{bet} Σ**"), "wrong": (user_balance-bet, f"\nYou lost **{bet} Σ**")}.get(user_correct)
+		success = {
+			"correct": user_parser.update_user_money(new_balance, db.user_db),
+			"wrong": user_parser.update_user_money(new_balance, db.user_db)
+		}.get(guess)
+
+		embed.description += win_indicator
+		embed.add_field(name="Balance", value=f"**{new_balance} Σ**", inline=True)
+		return await msg.edit(content=None, embed=embed)
+
+	@dice.error
+	async def dice_error(self, ctx, error):
+		pass
+
 	@commands.command(aliases=['wyr'])
 	@commands.cooldown(1, 2, commands.BucketType.user)
 	async def would_you_rather(self, ctx):

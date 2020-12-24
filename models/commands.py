@@ -54,6 +54,12 @@ help_cmd_struct = {
 			("Examples", "{p}{cmd}\n{p}{cmd} Heads\n{p}{cmd} Tails 1000")
 		]
 	},
+	("roll", "die", "dice"): {
+		"description": "`{p}{cmd}`\nRolls a standard dice and returns 1 to 6\n\n`{p}{cmd} <1/2/3/4/5/6>`\nRolls a standard dice and tells you whether your guess was correct\n\n`{p}{cmd} <1/2/3/4/5/6> <bet>`\nRolls a standard dice and if your guess was correct, you will win the bet",
+		"fields": [
+			("Examples", "{p}{cmd}\n{p}{cmd} 2\n{p}{cmd} 6 1000")
+		]
+	},
 	("item", "shop"): {
 		"description": "`{p}{cmd} list` or `{p}{cmd}`\nLists the items available\n\n`{p}{cmd} info <item-name>`\nReturns more info on <item-name>",
 		"fields": [
