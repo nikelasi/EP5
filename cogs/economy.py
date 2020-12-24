@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from models.constants import banned_transfers, embed_colour
 from models.db import db
-from models.parser import UserDataParser
+from models.parser import UserDataParser, ProcessingTools
 
 class economy(commands.Cog):
 	def __init__(self, client):
@@ -37,14 +37,14 @@ class economy(commands.Cog):
 		if not user: return await msg.edit(content=f"Who is this <@!{receiver.id}> you speak of? Never heard of them, hold on.\nPlease try again later")
 		receiver_user = UserDataParser(user)
 
-		if sender_user.get_user_money() < amount: return await msg.edit(content=f"You only have **{sender_user.get_user_money()} Σ**,\nyou cannot afford to send **{amount} Σ**!")
+		if sender_user.get_user_money() < amount: return await msg.edit(content=f"You only have **{sender_user.get_user_money():,} Σ**,\nyou cannot afford to send **{amount:,} Σ**!")
 
 		await msg.edit(content="processing payment...")
 		result = UserDataParser.process_payment(amount, sender_user, receiver_user, db.user_db)
 		if not (result["receiver_updated"] and result["sender_updated"]): return await msg.edit(content=f"Something went wrong while processing the payment, try again later")
 		
 		embed = discord.Embed(
-			description=f"You have sent **{result['amount']} Σ** to <@!{receiver.id}>!\n<@!{sender.id}>\'s balance: **{result['sender_balance']} Σ**\n<@!{receiver.id}>\'s balance: **{result['receiver_balance']} Σ**",
+			description=f"You have sent **{result['amount']:,} Σ** to <@!{receiver.id}>!\n<@!{sender.id}>\'s balance: **{result['sender_balance']:,} Σ**\n<@!{receiver.id}>\'s balance: **{result['receiver_balance']:,} Σ**",
 			colour=embed_colour
 		)
 		embed.set_author(name=f"Payment success")
@@ -58,7 +58,7 @@ class economy(commands.Cog):
 	@commands.cooldown(1, 2, commands.BucketType.user)
 	async def bank(self, ctx, cmdtype, amount=None):
 		msg = await ctx.send("processing...")
-		if not cmdtype.lower() in ["info", "withdraw", "deposit", "stats"]: return await msg.edit(content=f"`{cmdtype}` is none of the following:\n- `info`\n- `withdraw`\n- `deposit`\ndo `{ctx.prefix}help bank` for more info")
+		if not cmdtype.lower() in ["info", "withdraw", "deposit", "stats", "stat", "upgrade"]: return await msg.edit(content=f"`{cmdtype}` is none of the following:\n- `info`\n- `withdraw`\n- `deposit`\n- `upgrade`\ndo `{ctx.prefix}help bank` for more info")
 		
 		user = db.user_db.fetch_user(ctx.author.id, ctx.guild.id)
 		if not user: return await msg.edit(content=f"Hmm... somehow you don\'t exist to me, try again later!")
@@ -70,18 +70,41 @@ class economy(commands.Cog):
 			if not interest_result["success"]:
 				print("interest update unsuccessful")
 			embed = discord.Embed(
-				description=f"You earned **{interest_result['interest']} Σ** interest within the last **{interest_result['hours']} hours**!",
+				description=f"You earned **{interest_result['interest']:,} Σ** interest within the last **{interest_result['hours']:,} hours**!",
 				colour=embed_colour
 			)
 			await ctx.send(embed=embed)
 
-		if cmdtype.lower() == "info" or cmdtype.lower() == "stats":
+		if cmdtype.lower() in ["info", "stats", "stat"]:
+			money_to_upgrade = ProcessingTools.price_to_increment_interest(user_parser.get_interest_percent())
 			embed = discord.Embed(
-				description=f"**Bank Info**",
+				title="Bank Info",
+				description=f"**{money_to_upgrade:,} Σ** to upgrade to {user_parser.get_interest_percent()+1}% interest",
 				colour=embed_colour
 			)
 			embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url) #pylint: disable=E1101
-			embed.add_field(name="Balance", value=f"**{user_parser.get_bank_money()} Σ**", inline=True)
+			if (user_parser.get_user_money() + user_parser.get_bank_money()) < money_to_upgrade: embed.description = f"{embed.description}\nYou can\'t afford the upgrade yet"
+			else: embed.description = f"{embed.description}\nYou can afford the upgrade, make sure **{money_to_upgrade:,} Σ** is in the bank\nand run `{ctx.prefix}bank upgrade`"
+			embed.add_field(name="Interest", value=f"**{user_parser.get_interest_percent()}%**", inline=True)
+			embed.add_field(name="Balance", value=f"**{user_parser.get_bank_money():,} Σ**", inline=True)
+			return await msg.edit(content=None, embed=embed)
+
+		elif cmdtype.lower() == "upgrade":
+			money_to_upgrade = ProcessingTools.price_to_increment_interest(user_parser.get_interest_percent())
+			if user_parser.get_bank_money() < money_to_upgrade: return await msg.edit(content=f"Bank interest upgrade from {user_parser.get_interest_percent()}% to {user_parser.get_interest_percent()+1}% failed because,\nYou only have **{user_parser.get_bank_money():,} Σ** in your bank when you need **{money_to_upgrade:,} Σ** to upgrade.")
+			success = db.user_db.update_user_set_fields(
+				{"_id": user_parser.user_data["_id"]},
+				[
+					("bank.money", (user_parser.get_bank_money() - money_to_upgrade)),
+					("bank.interest", ((user_parser.get_interest_percent()+1)/100))
+				]
+			)
+			if not success: return await msg.edit(content=f"Something went wrong while upgrading your interest, try again later")
+			embed = discord.Embed(
+				description=f"Successfully upgraded to {user_parser.get_interest_percent()+1}% for a cost of **{money_to_upgrade:,} Σ**\nNew Bank Balance: **{(user_parser.get_bank_money()-money_to_upgrade):,} Σ**\nNew Bank Interest: **{user_parser.get_interest_percent()+1}%**",
+				colour=embed_colour
+			)
+			embed.set_author(name=f"Interest Upgrade")
 			return await msg.edit(content=None, embed=embed)
 
 		elif cmdtype.lower() == "withdraw":
@@ -94,13 +117,13 @@ class economy(commands.Cog):
 
 			if amount == 0: return await msg.edit(content="Please don\'t waste my resources doing a pointless task!")
 			if amount < 0: return await msg.edit(content=f"Are you trying to be a joker?")
-			if user_parser.get_bank_money() < amount: return await msg.edit(content=f"Your bank balance is **{user_parser.get_bank_money()} Σ**!\nYou cannot possibly withdraw more than you have!")
+			if user_parser.get_bank_money() < amount: return await msg.edit(content=f"Your bank balance is **{user_parser.get_bank_money():,} Σ**!\nYou cannot possibly withdraw more than you have!")
 
 			result = user_parser.process_bank_ops("withdraw", amount, db.user_db)
 			if not result["success"]: return await msg.edit(content=f"Something went wrong while withdrawing, try again later")
 
 			embed = discord.Embed(
-				description=f"You have withdrawn **{result['amount']} Σ** from the bank!\nNew User Balance: **{result['new_user_bal']} Σ**\nNew Bank Balance: **{result['new_bank_bal']} Σ**",
+				description=f"You have withdrawn **{result['amount']:,} Σ** from the bank!\nNew User Balance: **{result['new_user_bal']:,} Σ**\nNew Bank Balance: **{result['new_bank_bal']:,} Σ**",
 				colour=embed_colour
 			)
 			embed.set_author(name=f"Bank Withdrawal")
@@ -116,13 +139,13 @@ class economy(commands.Cog):
 
 			if amount == 0: return await msg.edit(content="Please don\'t waste my resources doing a pointless task!")
 			if amount < 0: return await msg.edit(content=f"Are you trying to be a joker?")
-			if user_parser.get_user_money() < amount: return await msg.edit(content=f"Your user balance is **{user_parser.get_user_money()} Σ**!\nYou cannot possibly deposit more than you have!")
+			if user_parser.get_user_money() < amount: return await msg.edit(content=f"Your user balance is **{user_parser.get_user_money():,} Σ**!\nYou cannot possibly deposit more than you have!")
 
 			result = user_parser.process_bank_ops("deposit", amount, db.user_db)
 			if not result["success"]: return await msg.edit(content=f"Something went wrong while depositing, try again later")
 
 			embed = discord.Embed(
-				description=f"You have deposited **{result['amount']} Σ** in the bank!\nNew User Balance: **{result['new_user_bal']} Σ**\nNew Bank Balance: **{result['new_bank_bal']} Σ**",
+				description=f"You have deposited **{result['amount']:,} Σ** in the bank!\nNew User Balance: **{result['new_user_bal']:,} Σ**\nNew Bank Balance: **{result['new_bank_bal']:,} Σ**",
 				colour=embed_colour
 			)
 			embed.set_author(name=f"Bank Deposition")

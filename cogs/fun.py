@@ -60,16 +60,16 @@ class fun(commands.Cog):
 
 		if bet == 0: return await msg.edit(content="If you want to bet nothing, just don\'t include the number next time")
 		if bet < 0: return await msg.edit(content=f"No no, you think I forgot about checking it?")
-		if user_balance < bet: return await msg.edit(content=f"Your user balance is **{user_balance} Σ**!\nYou cannot possibly bet more than you have!")
+		if user_balance < bet: return await msg.edit(content=f"Your user balance is **{user_balance:,} Σ**!\nYou cannot possibly bet more than you have!")
 
-		new_balance, win_indicator = {"correct": (user_balance+bet, f"\nYou won **{bet} Σ**"), "wrong": (user_balance-bet, f"\nYou lost **{bet} Σ**")}.get(guess)
+		new_balance, win_indicator = {"correct": (user_balance+bet, f"\nYou won **{bet:,} Σ**"), "wrong": (user_balance-bet, f"\nYou lost **{bet:,} Σ**")}.get(guess)
 		success = {
 			"correct": user_parser.update_user_money(new_balance, db.user_db),
 			"wrong": user_parser.update_user_money(new_balance, db.user_db)
 		}.get(guess)
 
 		embed.description += win_indicator
-		embed.add_field(name="Balance", value=f"**{new_balance} Σ**", inline=True)
+		embed.add_field(name="Balance", value=f"**{new_balance:,} Σ**", inline=True)
 		return await msg.edit(content=None, embed=embed)
 
 	@coinflip.error
@@ -111,16 +111,16 @@ class fun(commands.Cog):
 
 		if bet == 0: return await msg.edit(content="If you want to bet nothing, just don\'t include the number next time")
 		if bet < 0: return await msg.edit(content=f"No no, you think I forgot about checking it?")
-		if user_balance < bet: return await msg.edit(content=f"Your user balance is **{user_balance} Σ**!\nYou cannot possibly bet more than you have!")
+		if user_balance < bet: return await msg.edit(content=f"Your user balance is **{user_balance:,} Σ**!\nYou cannot possibly bet more than you have!")
 
-		new_balance, win_indicator = {"correct": (user_balance+bet, f"\nYou won **{bet} Σ**"), "wrong": (user_balance-bet, f"\nYou lost **{bet} Σ**")}.get(user_correct)
+		new_balance, win_indicator = {"correct": (user_balance+bet, f"\nYou won **{bet:,} Σ**"), "wrong": (user_balance-bet, f"\nYou lost **{bet:,} Σ**")}.get(user_correct)
 		success = {
 			"correct": user_parser.update_user_money(new_balance, db.user_db),
 			"wrong": user_parser.update_user_money(new_balance, db.user_db)
 		}.get(guess)
 
 		embed.description += win_indicator
-		embed.add_field(name="Balance", value=f"**{new_balance} Σ**", inline=True)
+		embed.add_field(name="Balance", value=f"**{new_balance:,} Σ**", inline=True)
 		return await msg.edit(content=None, embed=embed)
 
 	@dice.error
@@ -206,7 +206,7 @@ class fun(commands.Cog):
 			if not update_success: return await msg.edit(content=f"Something went wrong while crediting your account, try again later", embed=None)
 
 			embed.description = f"{embed.description}\nYou were correct! You earned **{money} Σ**"
-			embed.add_field(name="Balance", value=f"**{new_balance} Σ**")
+			embed.add_field(name="Balance", value=f"**{new_balance:,} Σ**")
 		else:
 			embed.description = f"{embed.description}\nYou were wrong! Better luck next time!"
 

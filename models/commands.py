@@ -43,9 +43,9 @@ help_cmd_struct = {
 		]
 	},
 	("bank"): {
-		"description": "`{p}{cmd} info`\nChecks your bank balance\n\n`{p}{cmd} withdraw <amount>`\nWithdraws <amount> from your bank balance\n\n`{p}{cmd} deposit <amount>`\nDeposits <amount> into your bank balance",
+		"description": "`{p}{cmd} info`\nChecks your bank balance\n\n`{p}{cmd} withdraw <amount>`\nWithdraws <amount> from your bank balance\n\n`{p}{cmd} deposit <amount>`\nDeposits <amount> into your bank balance\n\n`{p}{cmd} upgrade`\nUpgrades your bank interest to the next percentage above your current one for a price",
 		"fields": [
-			("Examples", "{p}{cmd} info\n{p}{cmd} withdraw 1000\n{p}{cmd} deposit 2500")
+			("Examples", "{p}{cmd} info\n{p}{cmd} withdraw 1000\n{p}{cmd} deposit 2500\n{p}{cmd} upgrade")
 		]
 	},
 	("cf", "coinflip", "flip"): {

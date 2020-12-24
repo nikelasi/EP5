@@ -69,7 +69,7 @@ class ItemCogChecks:
 
 		if not backpack: embed.set_author(icon_url=ctx.guild.icon_url, name=f"{ctx.guild.name}\'s Items")
 		if backpack: embed.set_author(icon_url=ctx.author.avatar_url, name=f"{ctx.author}\'s {backpack}")
-		embed.add_field(name="Cost", value=f"**{item_data['cost']} Σ**", inline=True)
+		embed.add_field(name="Cost", value=f"**{item_data['cost']:,} Σ**", inline=True)
 
 		if f"{ctx.guild.id}-{ctx.author.id}" in item_data["owners"]:
 			embed.add_field(name="Amount Owned", value=f"{item_data['owners'][f'{ctx.guild.id}-{ctx.author.id}']}/{item_data['max']}", inline=True)
@@ -82,7 +82,7 @@ class ItemCogChecks:
 			else:
 				embed.add_field(name="Supply", value=f"{item_data['supply']} left", inline=True)
 
-		embed.add_field(name="Base", value=f"**{item_data['avg_price']} Σ**", inline=True)
+		embed.add_field(name="Base", value=f"**{item_data['avg_price']:,} Σ**", inline=True)
 		embed.add_field(name="Min", value=f"{item_data['multipliers'][0]}%", inline=True)
 		embed.add_field(name="Max", value=f"{item_data['multipliers'][1]}%", inline=True)
 		if footer_info:
@@ -231,7 +231,7 @@ class items_cmd(commands.Cog):
 		if supply and count > supply: return await msg.edit(content=f"There is only `{supply}` stock{'s' if supply > 1 else ''} of `{item_name}`\nYou cannot possibly {ctx.invoked_with} `{count}` of `{item_name}`\nThe maximum amount of `{item_name}` you can {ctx.invoked_with} is `{(supply - amount_owned) if ((supply - amount_owned) < (max_amount - amount_owned)) else (max_amount - amount_owned)}`")
 		if amount_owned == max_amount: return await msg.edit(content=f"You already own the maximum amount of `{item_name}` which is `{max_amount}`")
 		if new_item_count > max_amount: return await msg.edit(content=f"If you {ctx.invoked_with} `{count}` more of `{item_name}`, you will exceed the maximum amount of `{item_name}` you can own which is `{max_amount}`\nThe maximum amount of `{item_name}` you can {ctx.invoked_with} is `{max_amount-amount_owned}`")
-		if cumul_cost > user_money: return await msg.edit(content=f"You can\'t afford `{count}` of `{item_name}` which costs **{cumul_cost} Σ**")
+		if cumul_cost > user_money: return await msg.edit(content=f"You can\'t afford `{count}` of `{item_name}` which costs **{cumul_cost:,} Σ**")
 		if supply: new_supply_count = supply - count
 
 		item_result = db.items_db.set_items_of(ctx.guild.id, user_id, item_name, new_item_count, new_supply_count)
@@ -242,10 +242,10 @@ class items_cmd(commands.Cog):
 
 		embed = discord.Embed(
 			title=f"Item{'s' if count > 1 else ''} Bought",
-			description=f"You successfully bought `{count}` of `{item_name}` for **{cumul_cost} Σ**",
+			description=f"You successfully bought `{count}` of `{item_name}` for **{cumul_cost:,} Σ**",
 			colour=embed_colour
 		)
-		embed.add_field(name="New Balance", value=f"**{new_user_money} Σ**", inline=True)
+		embed.add_field(name="New Balance", value=f"**{new_user_money:,} Σ**", inline=True)
 		embed.add_field(name=f"Item{'s' if count > 1 else ''}", value=f"`{count}` `{item_name}`", inline=True)
 		if supply: embed.add_field(name=f"New Item Supply", value=f"{new_supply_count}", inline=True)
 		embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url)
@@ -285,10 +285,10 @@ class items_cmd(commands.Cog):
 
 		embed = discord.Embed(
 			title=f"Item{'s' if count > 1 else ''} Sold",
-			description=f"You successfully sold `{count}` of `{item_name}` for **{cumul_cost} Σ**",
+			description=f"You successfully sold `{count}` of `{item_name}` for **{cumul_cost:,} Σ**",
 			colour=embed_colour
 		)
-		embed.add_field(name="New Balance", value=f"**{new_user_money} Σ**", inline=True)
+		embed.add_field(name="New Balance", value=f"**{new_user_money:,} Σ**", inline=True)
 		embed.add_field(name=f"Item{'s' if count > 1 else ''}", value=f"`{count}` `{item_name}`", inline=True)
 		if supply: embed.add_field(name=f"New Item Supply", value=f"{new_supply_count}", inline=True)
 		embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url)

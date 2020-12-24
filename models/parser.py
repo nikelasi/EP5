@@ -25,6 +25,12 @@ class ProcessingTools:
 
 		return ", ".join(_time)
 
+	@staticmethod
+	def price_to_increment_interest(current_interest):
+		#formula: 70,000(interest)^1.5
+		needed = int(round(70_000*current_interest**1.5, -3))
+		return needed
+
 class UserDataParser:
 	def __init__(self, data):
 		self.user_data = data
@@ -40,6 +46,9 @@ class UserDataParser:
 
 	def get_bank_money(self):
 		return self.bank_data["money"]
+
+	def get_interest_percent(self):
+		return int(self.bank_data["interest"] * 100)
 
 	def process_bank_ops(self, withdraw_or_deposit, amount, user_db):
 		bank_money, user_money = self.bank_data["money"], self.user_data["money"]

@@ -22,7 +22,7 @@ class userdata(commands.Cog):
 		for user in users:
 			ranking += 1
 			parser = UserDataParser(user)
-			lb += f"{ranking}) <@!{parser.get_id()[1]}> - **{parser.get_user_money()} Σ**\n"
+			lb += f"{ranking}) <@!{parser.get_id()[1]}> - **{parser.get_user_money():,} Σ**\n"
 
 			if ranking == 10: break
 
@@ -54,7 +54,7 @@ class userdata(commands.Cog):
 				colour=embed_colour
 			)
 
-			embed.add_field(name="User", value=f"Balance: **{data_parser.get_user_money()} Σ**")
+			embed.add_field(name="User", value=f"Balance: **{data_parser.get_user_money():,} Σ**")
 			embed.add_field(name="Others", value=f"ServerID: `{data_parser.get_id()[0]}`\nUserID: `{data_parser.get_id()[1]}`")
 			embed.set_author(name=f"{member}", icon_url=member.avatar_url)
 			return await msg.edit(content=None, embed=embed)
@@ -70,7 +70,7 @@ class userdata(commands.Cog):
 			colour=embed_colour
 		)
 
-		embed.add_field(name="User", value=f"Balance: **{data_parser.get_user_money()} Σ**")
+		embed.add_field(name="User", value=f"Balance: **{data_parser.get_user_money():,} Σ**")
 		embed.add_field(name="Others", value=f"ServerID: `{data_parser.get_id()[0]}`\nUserID: `{data_parser.get_id()[1]}`")
 		embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url)
 		return await msg.edit(content=None, embed=embed)
