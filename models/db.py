@@ -67,7 +67,8 @@ class UserData:
 			"rewards": {
 				"daily": 0,
 				"hourly": 0
-			}
+			},
+			"prestige": 0
 		}
 		try:
 			_ = self.db.insert_one(user)

@@ -103,5 +103,9 @@ help_cmd_struct = {
 		"fields": [
 			("Examples", "{p}{cmd} @User Item\n{p}{cmd} @User 10 Item")
 		]
+	},
+	("pres", "prestige"): {
+		"description": "`{p}{cmd}`\nManages the user prestige and derives rewards multiplier based on it.",
+		"fields": []
 	}
 }

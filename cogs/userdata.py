@@ -3,6 +3,7 @@ from discord.ext import commands
 from models.db import db
 from models.parser import UserDataParser
 from models.constants import embed_colour
+import asyncio
 
 class userdata(commands.Cog):
 	"""cog to store commands related to userdatay"""
@@ -54,7 +55,7 @@ class userdata(commands.Cog):
 				colour=embed_colour
 			)
 
-			embed.add_field(name="User", value=f"Balance: **{data_parser.get_user_money():,} Σ**")
+			embed.add_field(name="User", value=f"Balance: **{data_parser.get_user_money():,} Σ**\nPrestige **Rank {data_parser.get_prestige()+1}** [{1 if data_parser.get_prestige() == 0 else (1+(data_parser.get_prestige()*0.75))}x Reward Multiplier]")
 			embed.add_field(name="Others", value=f"ServerID: `{data_parser.get_id()[0]}`\nUserID: `{data_parser.get_id()[1]}`")
 			embed.set_author(name=f"{member}", icon_url=member.avatar_url)
 			return await msg.edit(content=None, embed=embed)
@@ -70,13 +71,72 @@ class userdata(commands.Cog):
 			colour=embed_colour
 		)
 
-		embed.add_field(name="User", value=f"Balance: **{data_parser.get_user_money():,} Σ**")
+		embed.add_field(name="User", value=f"Balance: **{data_parser.get_user_money():,} Σ**\nPrestige Rank **{data_parser.get_prestige()+1}** [{0 if data_parser.get_prestige() == 0 else (1+(data_parser.get_prestige()*0.75))}x Reward Multiplier]")
 		embed.add_field(name="Others", value=f"ServerID: `{data_parser.get_id()[0]}`\nUserID: `{data_parser.get_id()[1]}`")
 		embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url)
 		return await msg.edit(content=None, embed=embed)
 
 	@stat.error
 	async def stat_error(self, ctx, error):
+		pass
+
+	@commands.command(aliases=["pres"])
+	async def prestige(self, ctx):
+		msg = await ctx.send("processing data...")
+		user = db.user_db.fetch_user(ctx.author.id, ctx.guild.id)
+		if not user: return await msg.edit(content=f"It appears that you don\'t exist to me. (No offense)\nPlease try again later")
+		data_parser = UserDataParser(user)
+
+		prestige_cost = round(100000 * ((data_parser.get_prestige()+1)*1.25))
+
+		embed = discord.Embed(
+			title="Prestige Info",
+			description=f"When you prestige:\n1. Rewards multiplier will be increased by 0.75\n2. Your bank and balance will be resetted\n3. Flex more about how no life you are\n",
+			colour=embed_colour
+		)
+		embed.add_field(name="Current Rank", value=f"**Rank {data_parser.get_prestige()+1}**")
+		embed.add_field(name="Cost", value=f"**{prestige_cost:,} Σ**")		
+		if data_parser.get_user_money() < prestige_cost:
+			embed.description += f"Looks like you don\'t have enough **Σ** to prestige, try again when you have **{prestige_cost:,} Σ**!"
+			return await msg.edit(content=None, embed=embed)
+		
+		embed.description += f"You are eligible to prestige to Rank {data_parser.get_prestige()+2}, react with ☑️ to confirm ranking up or react with 🇽 to decline."
+		await msg.edit(content=None, embed=embed)
+		def check(reaction, user):
+			return user == ctx.author and reaction.message.id == msg.id and str(reaction.emoji) in ["☑️", "🇽"]
+		for reaction in ["☑️", "🇽"]: await msg.add_reaction(reaction)
+		try:
+			reaction, user = await self.client.wait_for("reaction_add", timeout=60, check=check)
+		except asyncio.TimeoutError:
+			return await msg.edit(content=f"You did not react within a 60s timespan, terminating prestige")
+
+		await msg.clear_reactions()
+		if str(reaction.emoji) == "🇽":
+			return await msg.edit(content="Declined Rank Up", embed=None)
+
+		await msg.edit(content="processing rank", embed=None)
+		success = db.user_db.update_user_set_fields(
+			{"_id": data_parser.user_data['_id']},
+			[
+				("bank.money", 0),
+				("money", 0),
+				("prestige", data_parser.get_prestige()+1)
+			]
+		)
+
+		if not success: return await msg.edit(content=f"Something went wrong while ranking up, try again later")
+
+		embed = discord.Embed(
+			title=f"Ranked Up Successfully",
+			description=f"You have ranked up to **Rank {data_parser.get_prestige()+2}**\nYour new rewards multiplier is {1+(0.75*(data_parser.get_prestige()+1))}x",
+			colour=embed_colour
+		)
+
+		return await msg.edit(content=None, embed=embed)
+
+
+	@prestige.error
+	async def prestige_error(self, ctx, error):
 		pass
 
 

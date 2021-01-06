@@ -24,6 +24,14 @@ class fun(commands.Cog):
 	@commands.cooldown(1, 2, commands.BucketType.user)
 	async def coinflip(self, ctx, heads_or_tails=None, bet=None):
 
+		try:
+			bet = int(bet)
+			if bet == 0: bet = None
+			if bet < 0: return await msg.edit(content=f"No no, you think I forgot about checking whether the bet is negative?")
+		except ValueError:
+			if bet != None: return await msg.edit(content=f"What does betting `{bet}` even mean? Does `{bet}` look like an integer to you?")
+		except TypeError: pass
+
 		msg = await ctx.send("flipping coin...")
 		probability = random.randrange(452, 558+1)
 		tails_percentage, heads_percentage, heads_threshold = f"{100 - (probability/10)}%", f"{probability/10}%", probability/1000
@@ -48,18 +56,11 @@ class fun(commands.Cog):
 		embed.add_field(name="Guess", value=heads_or_tails.capitalize(), inline=True)
 		if not bet: return await msg.edit(content=None, embed=embed)
 
-		try:
-			bet = int(bet)
-		except ValueError:
-			return await msg.edit(content=f"What does betting `{bet}` even mean? Does `{bet}` look like an integer to you?")
-
 		user = db.user_db.fetch_user(ctx.author.id, ctx.guild.id)
 		if not user: return await msg.edit(content=f"Hmm... somehow you don\'t exist to me, try again later!")
 		user_parser = UserDataParser(user)
 		user_balance = user_parser.get_user_money()
 
-		if bet == 0: return await msg.edit(content="If you want to bet nothing, just don\'t include the number next time")
-		if bet < 0: return await msg.edit(content=f"No no, you think I forgot about checking it?")
 		if user_balance < bet: return await msg.edit(content=f"Your user balance is **{user_balance:,} Σ**!\nYou cannot possibly bet more than you have!")
 
 		new_balance, win_indicator = {"correct": (user_balance+bet, f"\nYou won **{bet:,} Σ**"), "wrong": (user_balance-bet, f"\nYou lost **{bet:,} Σ**")}.get(guess)
@@ -79,6 +80,14 @@ class fun(commands.Cog):
 	@commands.command(aliases=["roll", "die"])
 	@commands.cooldown(1, 2, commands.BucketType.user)
 	async def dice(self, ctx, guess=None, bet=None):
+
+		try:
+			bet = int(bet)
+			if bet == 0: bet = None
+			if bet < 0: return await msg.edit(content=f"No no, you think I forgot about checking whether the bet is negative?")
+		except ValueError:
+			if bet != None: return await msg.edit(content=f"What does betting `{bet}` even mean? Does `{bet}` look like an integer to you?")
+		except TypeError: pass
 
 		msg = await ctx.send("rolling dice...")
 		result = random.randint(1, 6)
@@ -101,16 +110,11 @@ class fun(commands.Cog):
 		embed.add_field(name="Guess", value=f"**{guess}**", inline=True)
 		if not bet: return await msg.edit(content=None, embed=embed)
 
-		try: bet = int(bet)
-		except ValueError: return await msg.edit(content=f"What does betting `{bet}` even mean? Does `{bet}` look like an integer to you?")
-
 		user = db.user_db.fetch_user(ctx.author.id, ctx.guild.id)
 		if not user: return await msg.edit(content=f"Hmm... somehow you don\'t exist to me, try again later!")
 		user_parser = UserDataParser(user)
 		user_balance = user_parser.get_user_money()
 
-		if bet == 0: return await msg.edit(content="If you want to bet nothing, just don\'t include the number next time")
-		if bet < 0: return await msg.edit(content=f"No no, you think I forgot about checking it?")
 		if user_balance < bet: return await msg.edit(content=f"Your user balance is **{user_balance:,} Σ**!\nYou cannot possibly bet more than you have!")
 
 		new_balance, win_indicator = {"correct": (user_balance+bet, f"\nYou won **{bet:,} Σ**"), "wrong": (user_balance-bet, f"\nYou lost **{bet:,} Σ**")}.get(user_correct)
@@ -217,23 +221,30 @@ class fun(commands.Cog):
 		pass
 
 	#@commands.command(aliases=["chal", "ch"])
-	#async def challenge(self, ctx, member:discord.Member=None, bet=None, game_mode=None):
+	#async def challenge(self, ctx, member:discord.Member=None, game_mode=None, bet=None):
 	#	ctx.invoked_with = ctx.invoked_with.lower()
 	#	msg = await ctx.send("processing...")
 	#	if not member: return await msg.edit(content=f"Please specify who you want to challenge!\ndo `{ctx.prefix}help {ctx.invoked_with}` for more info")
-	#	if not bet: return await msg.edit(content=f"Please specify the bet!\ndo `{ctx.prefix}help {ctx.invoked_with}` for more info")
 	#	if not game_mode: return await msg.edit(content=f"Please specify the game mode you want to challenge {member.name} on")
 	#	try:
 	#		bet = int(bet)
+	#		if bet < 0: return await msg.edit(content="you can\' bet negative amount of money")
+	#		if bet == 0: bet = None
 	#	except ValueError:
-	#		return await msg.edit(content=f"does {bet} look like a number to you?")
-
-	#	if bet == 0: return await msg.edit(content=f"you have to bet at least something")
-	#	if bet < 0: return await msg.edit(content="you can\' bet negative amount of money")
-
-	#	game_modes = [""]
-	#	if not game_mode in game_modes: return await msg.edit(content=f"select a available gamemode!")
-
+	#		if bet != None: return await msg.edit(content=f"Does {bet} look like a number to you?")
+	#	except TypeError: pass
+	#
+	#	game_modes, game_mode = ["coinflip", "dice"], game_mode.lower()
+	#	if not game_mode in game_modes: return await msg.edit(content=f"Please select an available gamemode!\nAvailable gamemodes are:\n{', '.join(map(lambda x: f'`{x}`', game_modes))}\ntry again")
+	#
+	#	game_function = {
+	#		"coinflip": func,
+	#		"dice": func
+	#	}.get(game_mode)
+	#
+	#@challenge.error
+	#async def challenge_error(self, ctx, error):
+	#	pass
 
 def setup(client):
 	client.add_cog(fun(client))

@@ -28,7 +28,7 @@ class ProcessingTools:
 	@staticmethod
 	def price_to_increment_interest(current_interest):
 		#formula: 70,000(interest)^1.5
-		needed = int(round(70_000*current_interest**1.5, -3))
+		needed = int(round(70_000*current_interest**(current_interest*0.35), -3))
 		return needed
 
 class UserDataParser:
@@ -48,7 +48,10 @@ class UserDataParser:
 		return self.bank_data["money"]
 
 	def get_interest_percent(self):
-		return int(self.bank_data["interest"] * 100)
+		return round(self.bank_data["interest"] * 100)
+
+	def get_prestige(self):
+		return int(self.user_data['prestige'])
 
 	def process_bank_ops(self, withdraw_or_deposit, amount, user_db):
 		bank_money, user_money = self.bank_data["money"], self.user_data["money"]
@@ -156,8 +159,12 @@ class UserDataParser:
 		last_collected = self.rewards_data[_type]
 		timeframe = now-last_collected
 
+		multiplier = 1
+		if self.get_prestige() != 0:
+			multiplier += (0.75*(self.get_prestige()))
+
 		if timeframe // _period > 0: #eligible for rewards
-			new_amount = self.user_data["money"] + _prize
+			new_amount = self.user_data["money"] + round(_prize * multiplier)
 			success = user_db.update_user_set_fields(
 				{"_id": self.user_data["_id"]},
 				[
