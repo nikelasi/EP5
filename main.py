@@ -1,6 +1,6 @@
 import os, json, time, asyncio, random, threading #pylint: disable=W0611
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from models.db import db
 from models.commands import help_cmd_struct
 from models.constants import embed_colour
@@ -12,30 +12,21 @@ in_development = False
 client = commands.Bot(command_prefix=db.prefix_db.get_prefix, case_insensitive=True)
 client.remove_command('help')
 
-class ItemsUpdateLoop(threading.Thread):
-	def __init__(self, seconds, guild_ids):
-		super().__init__()
-		self.delay = seconds
-		self.guild_ids = guild_ids
-		self.is_done = False
-		self.last_updated = 0
+class PriceUpdateData:
+	def __init__(self, guilds):
+		self.last_updated = None
+		self.__update__data__(guilds)
 
-	def done(self):
-		self.is_done = True
+	def __update__data__(self, guilds):
+		self.guilds = guilds
+		self.guilds_data = []
+		messages_info = db.message_info_db.fetch_all()
+		for guild, webhooks in self.guilds:
+			guild_id = guild.id
+			msgs_info = list(filter(lambda info: info['server_id'] == str(guild_id), messages_info))
+			self.guilds_data.append({"guild": guild, "id": guild_id, "info": msgs_info, "webhooks": webhooks})
 
-	def run(self):
-		while not self.is_done:
-			self.last_updated = time.time()
-			time.sleep(self.delay)
-			for guild_id in self.guild_ids:
-				try:
-					threading.Thread(target=db.items_db.update_items_price, kwargs={'guild_id': guild_id}).start()
-				except Exception:
-					pass
-
-		print("thread finished")
-
-iul = None
+P_U_D = None
 
 class MainExtraMethods:
 	def __init__(self):
@@ -119,13 +110,20 @@ async def on_message(message):
 
 	await client.process_commands(message)
 
+@tasks.loop(minutes=15.0)
+async def price_update_loop():
+	global P_U_D
+	P_U_D.__update__data__([(guild, await guild.webhooks()) for guild in client.guilds])
+	P_U_D.last_updated = time.time()
+	await asyncio.gather(*[db.items_db.update_items_price(guild_data=guild_data) for guild_data in P_U_D.guilds_data])
+
 @client.event
 async def on_ready():
-	global iul
-	guild_ids = [guild.id for guild in list(client.guilds)]
-	iul = ItemsUpdateLoop(60*15, guild_ids)
-	print("ItemsUpdateLoop started")
-	iul.start()
+	global P_U_D
+	P_U_D = PriceUpdateData([(guild, await guild.webhooks()) for guild in client.guilds])
+	P_U_D.last_updated = time.time()
+	price_update_loop.start()
+	print("Price Update Data Loop started")
 	print('FyreDiscord is dedn\'t')
 	await client.change_presence(
 		activity=discord.Activity(
@@ -175,8 +173,9 @@ async def prefix(ctx, p):
 
 @client.command(aliases=["stock_change", "pc", "price_change"])
 async def sc(ctx):
+	global P_U_D
 	msg = await ctx.send(f"checking time...")
-	last_updated = int(iul.last_updated)
+	last_updated = round(P_U_D.last_updated)
 	next_updated = last_updated + 60*15
 	time_to_update = round(next_updated - int(time.time()))
 	formatted_time = ProcessingTools.seconds_to_time(time_to_update)
@@ -200,6 +199,14 @@ async def ping(ctx, destination=None):
 		await message.edit(content=f"Database ping: `{round(ping)}ms`")
 	else:
 		await ctx.send(f"`{destination}` isn\'t a valid destination to ping.\nYou can ping `bot`, `response` or `db`.")
+
+@client.command()
+async def reload_iul(ctx):
+	if ctx.author.id in owner_ids:
+		global P_U_D
+		msg = await ctx.send('reloading...')
+		P_U_D.__update__data__([(guild, await guild.webhooks()) for guild in client.guilds])
+		await msg.edit(content=f'Updated Data for `Price Update Data`')
 
 @client.command()
 async def load(ctx, extension):
