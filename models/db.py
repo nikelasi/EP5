@@ -164,7 +164,9 @@ class ItemsData:
 				profit = round(max_count*max_price*0.8) - round(max_count*min_price)
 				profitability = "Low" if profit < 300 else "Moderate" if profit < 2000 else "High"
 				embed.add_field(name=item['name'], value=f"**{item['cost']} Σ** [**{min_price} Σ** ~ **{max_price} Σ**]\n{profitability} Profitability [**{profit} Σ**]")
-			_now, _next = time.time(), (time.time() + 15*60)
+			
+			time_offset = 28800
+			_now, _next = (time.time() + time_offset), ((time.time() + 15*60) + time_offset)
 			_now = datetime.datetime.fromtimestamp(_now).strftime('%e %b %I:%M %p')
 			_next = datetime.datetime.fromtimestamp(_next).strftime('%e %b %I:%M %p')
 			embed.set_footer(text=f"Last Updated: {_now}\nNext Update: {_next}")
