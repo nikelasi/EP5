@@ -91,7 +91,7 @@ class userdata(commands.Cog):
 
 		embed = discord.Embed(
 			title="Prestige Info",
-			description=f"When you prestige:\n1. Rewards multiplier will be increased by 0.75\n2. Your bank and balance will be resetted\n3. Flex more about how no life you are\n",
+			description=f"When you prestige:\n1. Rewards multiplier will be increased by 0.75\n2. Flex more about how no life you are\n",
 			colour=embed_colour
 		)
 		embed.add_field(name="Current Rank", value=f"**Rank {data_parser.get_prestige()+1}**")
@@ -118,8 +118,6 @@ class userdata(commands.Cog):
 		success = db.user_db.update_user_set_fields(
 			{"_id": data_parser.user_data['_id']},
 			[
-				("bank.money", 0),
-				("money", 0),
 				("prestige", data_parser.get_prestige()+1)
 			]
 		)
