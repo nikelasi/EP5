@@ -162,9 +162,10 @@ class UserDataParser:
 		multiplier = 1
 		if self.get_prestige() != 0:
 			multiplier += (0.75*(self.get_prestige()))
+		_prize = round(_prize * multiplier)
 
 		if timeframe // _period > 0: #eligible for rewards
-			new_amount = self.user_data["money"] + round(_prize * multiplier)
+			new_amount = self.user_data["money"] + _prize
 			success = user_db.update_user_set_fields(
 				{"_id": self.user_data["_id"]},
 				[
@@ -176,6 +177,7 @@ class UserDataParser:
 			return {
 				"eligible": True,
 				"update_status": success,
+				"prize": _prize,
 				"next_reward": ProcessingTools.seconds_to_time(_period)
 			}
 

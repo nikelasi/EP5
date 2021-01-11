@@ -95,8 +95,9 @@ class userdata(commands.Cog):
 			colour=embed_colour
 		)
 		embed.add_field(name="Current Rank", value=f"**Rank {data_parser.get_prestige()+1}**")
-		embed.add_field(name="Cost", value=f"**{prestige_cost:,} Σ**")		
-		if data_parser.get_user_money() < prestige_cost:
+		embed.add_field(name="Cost", value=f"**{prestige_cost:,} Σ**")	
+		user_money = data_parser.get_user_money()
+		if user_money < prestige_cost:
 			embed.description += f"Looks like you don\'t have enough **Σ** to prestige, try again when you have **{prestige_cost:,} Σ**!"
 			return await msg.edit(content=None, embed=embed)
 		
@@ -118,6 +119,7 @@ class userdata(commands.Cog):
 		success = db.user_db.update_user_set_fields(
 			{"_id": data_parser.user_data['_id']},
 			[
+				("money", user_money - prestige_cost),
 				("prestige", data_parser.get_prestige()+1)
 			]
 		)

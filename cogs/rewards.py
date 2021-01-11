@@ -26,6 +26,7 @@ class RewardsCMDHandler:
 
 		if process_results["eligible"]:
 			if process_results["update_status"]:
+				_prize = process_results["prize"]
 				embed = discord.Embed(
 					description=f"**{_type.capitalize()} Reward**",
 					colour=embed_colour
