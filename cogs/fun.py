@@ -1,12 +1,9 @@
-import random, enum
-import discord
+import random, enum, discord, requests, asyncio
 from discord.ext import commands
-from models.constants import embed_colour
-from models.db import db
-from models.parser import UserDataParser
+from configs.settings import embed_colour
+from database.db import db
+from parser.parsers import UserData
 from bs4 import BeautifulSoup
-import requests
-import asyncio
 
 class Coinflip(enum.Enum):
 	HEADS = "Heads"
@@ -27,9 +24,9 @@ class fun(commands.Cog):
 		try:
 			bet = int(bet)
 			if bet == 0: bet = None
-			if bet < 0: return await msg.edit(content=f"No no, you think I forgot about checking whether the bet is negative?")
+			if bet < 0: return await ctx.send(content=f"No no, you think I forgot about checking whether the bet is negative?")
 		except ValueError:
-			if bet != None: return await msg.edit(content=f"What does betting `{bet}` even mean? Does `{bet}` look like an integer to you?")
+			if bet != None: return await ctx.send(content=f"What does betting `{bet}` even mean? Does `{bet}` look like an integer to you?")
 		except TypeError: pass
 
 		msg = await ctx.send("flipping coin...")
@@ -58,15 +55,15 @@ class fun(commands.Cog):
 
 		user = db.user_db.fetch_user(ctx.author.id, ctx.guild.id)
 		if not user: return await msg.edit(content=f"Hmm... somehow you don\'t exist to me, try again later!")
-		user_parser = UserDataParser(user)
+		user_parser = UserData(user)
 		user_balance = user_parser.get_user_money()
 
 		if user_balance < bet: return await msg.edit(content=f"Your user balance is **{user_balance:,} Σ**!\nYou cannot possibly bet more than you have!")
 
 		new_balance, win_indicator = {"correct": (user_balance+bet, f"\nYou won **{bet:,} Σ**"), "wrong": (user_balance-bet, f"\nYou lost **{bet:,} Σ**")}.get(guess)
 		success = {
-			"correct": user_parser.update_user_money(new_balance, db.user_db),
-			"wrong": user_parser.update_user_money(new_balance, db.user_db)
+			"correct": user_parser.update_user_money(new_balance),
+			"wrong": user_parser.update_user_money(new_balance)
 		}.get(guess)
 
 		embed.description += win_indicator
@@ -84,9 +81,9 @@ class fun(commands.Cog):
 		try:
 			bet = int(bet)
 			if bet == 0: bet = None
-			if bet < 0: return await msg.edit(content=f"No no, you think I forgot about checking whether the bet is negative?")
+			if bet < 0: return await ctx.send(content=f"No no, you think I forgot about checking whether the bet is negative?")
 		except ValueError:
-			if bet != None: return await msg.edit(content=f"What does betting `{bet}` even mean? Does `{bet}` look like an integer to you?")
+			if bet != None: return await ctx.send(content=f"What does betting `{bet}` even mean? Does `{bet}` look like an integer to you?")
 		except TypeError: pass
 
 		msg = await ctx.send("rolling dice...")
@@ -112,15 +109,15 @@ class fun(commands.Cog):
 
 		user = db.user_db.fetch_user(ctx.author.id, ctx.guild.id)
 		if not user: return await msg.edit(content=f"Hmm... somehow you don\'t exist to me, try again later!")
-		user_parser = UserDataParser(user)
+		user_parser = UserData(user)
 		user_balance = user_parser.get_user_money()
 
 		if user_balance < bet: return await msg.edit(content=f"Your user balance is **{user_balance:,} Σ**!\nYou cannot possibly bet more than you have!")
 
 		new_balance, win_indicator = {"correct": (user_balance+bet, f"\nYou won **{bet:,} Σ**"), "wrong": (user_balance-bet, f"\nYou lost **{bet:,} Σ**")}.get(user_correct)
 		success = {
-			"correct": user_parser.update_user_money(new_balance, db.user_db),
-			"wrong": user_parser.update_user_money(new_balance, db.user_db)
+			"correct": user_parser.update_user_money(new_balance),
+			"wrong": user_parser.update_user_money(new_balance)
 		}.get(guess)
 
 		embed.description += win_indicator
@@ -202,11 +199,11 @@ class fun(commands.Cog):
 			money = random.randint(25, 50)
 			user = db.user_db.fetch_user(ctx.author.id, ctx.guild.id)
 			if not user: return await msg.edit(content=f"Hmm... somehow you don\'t exist to me, try again later!")
-			user_parser = UserDataParser(user)
+			user_parser = UserData(user)
 			user_balance = user_parser.get_user_money()
 			new_balance = user_balance + money
 
-			update_success = user_parser.update_user_money(new_balance, db.user_db)
+			update_success = user_parser.update_user_money(new_balance)
 			if not update_success: return await msg.edit(content=f"Something went wrong while crediting your account, try again later", embed=None)
 
 			embed.description = f"{embed.description}\nYou were correct! You earned **{money} Σ**"

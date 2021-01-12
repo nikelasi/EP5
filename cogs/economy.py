@@ -1,8 +1,10 @@
 import discord
 from discord.ext import commands
-from models.constants import banned_transfers, embed_colour
-from models.db import db
-from models.parser import UserDataParser, ProcessingTools
+from configs.settings import banned_transfers, embed_colour
+from database.db import db
+from parser.parsers import UserData
+from utils.economy import *
+from utils.formulas import *
 
 class economy(commands.Cog):
 	def __init__(self, client):
@@ -32,15 +34,15 @@ class economy(commands.Cog):
 		await msg.edit(content=f"checking user data...")
 		user = db.user_db.fetch_user(sender.id, ctx.guild.id)
 		if not user: return await msg.edit(content=f"Hmm... somehow you don\'t exist to me, try again later!")
-		sender_user = UserDataParser(user)
+		sender_user = UserData(user)
 		user = db.user_db.fetch_user(receiver.id, ctx.guild.id)
 		if not user: return await msg.edit(content=f"Who is this <@!{receiver.id}> you speak of? Never heard of them, hold on.\nPlease try again later")
-		receiver_user = UserDataParser(user)
+		receiver_user = UserData(user)
 
 		if sender_user.get_user_money() < amount: return await msg.edit(content=f"You only have **{sender_user.get_user_money():,} Σ**,\nyou cannot afford to send **{amount:,} Σ**!")
 
 		await msg.edit(content="processing payment...")
-		result = UserDataParser.process_payment(amount, sender_user, receiver_user, db.user_db)
+		result = process_payment(amount, sender_user, receiver_user)
 		if not (result["receiver_updated"] and result["sender_updated"]): return await msg.edit(content=f"Something went wrong while processing the payment, try again later")
 		
 		embed = discord.Embed(
@@ -62,8 +64,8 @@ class economy(commands.Cog):
 		
 		user = db.user_db.fetch_user(ctx.author.id, ctx.guild.id)
 		if not user: return await msg.edit(content=f"Hmm... somehow you don\'t exist to me, try again later!")
-		user_parser = UserDataParser(user)
-		interest_result = user_parser.process_bank_interest(db.user_db)
+		user_parser = UserData(user)
+		interest_result = process_bank_interest(user_parser)
 		if interest_result == 0:
 			interest_result = False
 		else:
@@ -76,7 +78,7 @@ class economy(commands.Cog):
 			await ctx.send(embed=embed)
 
 		if cmdtype.lower() in ["info", "stats", "stat"]:
-			money_to_upgrade = ProcessingTools.price_to_increment_interest(user_parser.get_interest_percent())
+			money_to_upgrade = get_interest_cost(user_parser.get_interest_percent())
 			embed = discord.Embed(
 				title="Bank Info",
 				description=f"**{money_to_upgrade:,} Σ** to upgrade to {user_parser.get_interest_percent()+1}% interest",
@@ -90,7 +92,7 @@ class economy(commands.Cog):
 			return await msg.edit(content=None, embed=embed)
 
 		elif cmdtype.lower() == "upgrade":
-			money_to_upgrade = ProcessingTools.price_to_increment_interest(user_parser.get_interest_percent())
+			money_to_upgrade = get_interest_cost(user_parser.get_interest_percent())
 			if user_parser.get_bank_money() < money_to_upgrade: return await msg.edit(content=f"Bank interest upgrade from {user_parser.get_interest_percent()}% to {user_parser.get_interest_percent()+1}% failed because,\nYou only have **{user_parser.get_bank_money():,} Σ** in your bank when you need **{money_to_upgrade:,} Σ** to upgrade.")
 			success = db.user_db.update_user_set_fields(
 				{"_id": user_parser.user_data["_id"]},
@@ -119,7 +121,7 @@ class economy(commands.Cog):
 			if amount < 0: return await msg.edit(content=f"Are you trying to be a joker?")
 			if user_parser.get_bank_money() < amount: return await msg.edit(content=f"Your bank balance is **{user_parser.get_bank_money():,} Σ**!\nYou cannot possibly withdraw more than you have!")
 
-			result = user_parser.process_bank_ops("withdraw", amount, db.user_db)
+			result = process_bank_ops(user_parser, "withdraw", amount)
 			if not result["success"]: return await msg.edit(content=f"Something went wrong while withdrawing, try again later")
 
 			embed = discord.Embed(
@@ -141,7 +143,7 @@ class economy(commands.Cog):
 			if amount < 0: return await msg.edit(content=f"Are you trying to be a joker?")
 			if user_parser.get_user_money() < amount: return await msg.edit(content=f"Your user balance is **{user_parser.get_user_money():,} Σ**!\nYou cannot possibly deposit more than you have!")
 
-			result = user_parser.process_bank_ops("deposit", amount, db.user_db)
+			result = process_bank_ops(user_parser, "deposit", amount)
 			if not result["success"]: return await msg.edit(content=f"Something went wrong while depositing, try again later")
 
 			embed = discord.Embed(

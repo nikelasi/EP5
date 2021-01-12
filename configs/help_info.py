@@ -1,5 +1,5 @@
 
-help_cmd_struct = {
+help_info_data = {
 	("stat", "stats", "user", "bal"): {
 		"description": "`{p}{cmd}`\nCheck your own stats\n\n`{p}{cmd} @User`\nChecks the stats of @User",
 		"fields": [

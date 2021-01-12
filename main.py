@@ -1,10 +1,9 @@
-import os, json, time, asyncio, random, threading #pylint: disable=W0611
-import discord
+import os, json, time, asyncio, random, threading, discord
 from discord.ext import commands, tasks
-from models.db import db
-from models.commands import help_cmd_struct
-from models.constants import embed_colour
-from models.parser import ProcessingTools
+from utils.main import *
+from configs.settings import embed_colour
+from database.db import db
+from utils.formatters import seconds_to_time
 
 owner_ids = [593735027121061889, 348307478808756224]
 in_development = False
@@ -28,52 +27,14 @@ class PriceUpdateData:
 
 P_U_D = None
 
-class MainExtraMethods:
-	def __init__(self):
-		pass
-
-	@staticmethod
-	def format_help_string(text, p, cmd):
-		return text.replace('{p}', f'{p}').replace('{cmd}', f'{cmd}')
-
-	@staticmethod
-	def get_cmd_data_for(cmd):
-
-		cmd_data = None
-		for aliases, data in help_cmd_struct.items():
-			cmd_data = (data, aliases) if cmd in aliases else None
-			if cmd_data:
-				return cmd_data
-		return cmd_data
-
-	@staticmethod	
-	def get_help_embed_for(cmd, cmd_data, ctx):
-
-		embed = discord.Embed(
-			title=f"**Command:** `{cmd}`",
-			description=f"{MainExtraMethods.format_help_string(cmd_data[0]['description'], ctx.prefix, cmd)}",
-			colour=embed_colour
-		)
-
-		for name, value in cmd_data[0]["fields"]:
-			embed.add_field(name=f"{MainExtraMethods.format_help_string(name, ctx.prefix, cmd)}", value=f"{MainExtraMethods.format_help_string(value, ctx.prefix, cmd)}", inline=True)
-
-		if type(cmd_data[1]) != str:
-			aliases = list(cmd_data[1])
-			aliases.remove(cmd)
-			aliases = map(lambda x: f"`{x}`", aliases)
-			embed.add_field(name="Aliases", value=f"{' '.join(aliases)}", inline=True)
-
-		return embed
-
 @client.command()
 async def help(ctx, cmd=None):
 	msg = await ctx.send(f"fetching command data...")
 	if cmd:
 		cmd = cmd.lower()
-		cmd_data = MainExtraMethods.get_cmd_data_for(cmd)
+		cmd_data = get_cmd_data_for(cmd)
 		if not cmd_data: return await msg.edit(content=f"Command `{cmd}` does not exist!")
-		return await msg.edit(content=None, embed=MainExtraMethods.get_help_embed_for(cmd, cmd_data, ctx))
+		return await msg.edit(content=None, embed=get_help_embed_for(cmd, cmd_data, ctx))
 
 	embed = discord.Embed(
 		title=f"**Commands**",
@@ -142,7 +103,7 @@ async def on_command_error(ctx, error):
 		ignored_cases = stat_cmd + bp_cmd
 		if ctx.invoked_with in ignored_cases: return
 		await ctx.send(f"You did not pass in required arguments\n here\'s some info and examples on `{ctx.invoked_with}`")
-		await ctx.send(embed=MainExtraMethods.get_help_embed_for(ctx.invoked_with, MainExtraMethods.get_cmd_data_for(ctx.invoked_with), ctx))
+		await ctx.send(embed=get_help_embed_for(ctx.invoked_with, get_cmd_data_for(ctx.invoked_with), ctx))
 
 	elif isinstance(error, discord.Forbidden):
 		pass
@@ -178,7 +139,7 @@ async def sc(ctx):
 	last_updated = round(P_U_D.last_updated)
 	next_updated = last_updated + 60*15
 	time_to_update = round(next_updated - int(time.time()))
-	formatted_time = ProcessingTools.seconds_to_time(time_to_update)
+	formatted_time = seconds_to_time(time_to_update)
 	return await msg.edit(content=f"`{formatted_time}` to next price change")
 
 @client.command()
@@ -242,7 +203,7 @@ async def ping_error(ctx, error):
 	pass
 
 for filename in os.listdir('./cogs'):
-	if filename.endswith(".py"):
+	if filename.endswith(".py") and filename != "__init__.py":
 		client.load_extension(f'cogs.{filename[:-3]}')
 
 client.run(os.environ['DISCORD_TOKEN'])
