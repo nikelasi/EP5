@@ -83,3 +83,6 @@ up to the user.
 - [`ping`](#)
 - [`prefix`](#)
 - [`help`](#)
+
+## License [![Unlicense](https://img.shields.io/github/license/NicholasJohansan/EP5)](LICENSE)
+[Unlicense](https://unlicense.org/) Licensed (file [LICENSE](LICENSE)).
