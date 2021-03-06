@@ -1,4 +1,4 @@
-import discord
+import discord, asyncio
 from discord.ext import commands
 from configs.settings import banned_transfers, embed_colour
 from database.db import db
@@ -54,6 +54,56 @@ class economy(commands.Cog):
 
 	@pay.error
 	async def pay_error(self, ctx, error):
+		pass
+
+	@commands.command(aliases=["bank_reset"])
+	@commands.cooldown(1, 2, commands.BucketType.user)
+	async def reset_bank(self, ctx):
+		msg = await ctx.send("processing...")
+		user = db.user_db.fetch_user(ctx.author.id, ctx.guild.id)
+		if not user: return await msg.edit(content=f"It appears that you don\'t exist to me. (No offense)\nPlease try again later")
+		data_parser = UserData(user)
+
+		embed = discord.Embed(
+			title="Bank Reset",
+			description=f"Are you sure you want to reset your bank money?\nNote: interest will stay\n",
+			colour=embed_colour
+		)
+
+		await msg.edit(content=None, embed=embed)
+		def check(reaction, user):
+			return user == ctx.author and reaction.message.id == msg.id and str(reaction.emoji) in ["☑️", "🇽"]
+		for reaction in ["☑️", "🇽"]: await msg.add_reaction(reaction)
+		try:
+			reaction, user = await self.client.wait_for("reaction_add", timeout=60, check=check)
+		except asyncio.TimeoutError:
+			return await msg.edit(content=f"You did not react within a 60s timespan, terminating prestige")
+
+		await msg.clear_reactions()
+		if str(reaction.emoji) == "🇽":
+			return await msg.edit(content="Cancelled Bank Reset", embed=None)
+
+		await msg.edit(content="processing reset...", embed=None)
+		success = db.user_db.update_user_set_fields(
+			{"_id": data_parser.user_data['_id']},
+			[
+				("bank.money", 0),
+				("bank.last_seen", int(time.time()))
+			]
+		)
+
+		if not success: return await msg.edit(content=f"Something went wrong while resetting your bank money, try again later")
+
+		embed = discord.Embed(
+			title=f"Bank Reset Successful",
+			description=f"Your bank reset have been successful!",
+			colour=embed_colour
+		)
+
+		return await msg.edit(content=None, embed=embed)
+
+	@reset_bank.error
+	async def bank_reset_error(self, ctx, error):
 		pass
 
 	@commands.command()
