@@ -7,6 +7,7 @@ from utils.formatters import seconds_to_time
 
 owner_ids = [593735027121061889, 348307478808756224]
 in_development = False
+MM_MSG = None
 
 client = commands.Bot(command_prefix=db.prefix_db.get_prefix, case_insensitive=True)
 client.remove_command('help')
@@ -78,12 +79,26 @@ async def price_update_loop():
 	P_U_D.last_updated = time.time()
 	await asyncio.gather(*[db.items_db.update_items_price(guild_data=guild_data) for guild_data in P_U_D.guilds_data])
 
+@tasks.loop(seconds=30.0)
+async def MM_Loop():
+	global MM_MSG
+	MM_TIMESTAMP = 1618183800
+	time_to_mm = round(MM_TIMESTAMP - int(time.time()))
+	formatted_time = seconds_to_time(time_to_mm)
+	msg = f"`{formatted_time}` to <@!348307478808756224>'s Motivational Monday Presentation!"
+	channel = client.get_channel(761058088358248458)
+	if MM_MSG is None:
+		MM_MSG = await channel.send(msg)
+	else:
+		await MM_MSG.edit(content=msg)
+
 @client.event
 async def on_ready():
 	global P_U_D
 	P_U_D = PriceUpdateData([(guild, await guild.webhooks()) for guild in client.guilds])
 	P_U_D.last_updated = time.time()
 	price_update_loop.start()
+	MM_Loop.start()
 	print("Price Update Data Loop started")
 	print('FyreDiscord is dedn\'t')
 	await client.change_presence(
