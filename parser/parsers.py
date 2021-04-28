@@ -1,3 +1,4 @@
-from .data import user
+from .data import user, item
 
 UserData = user.UserData
+ItemData = item.ItemData

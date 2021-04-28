@@ -2,6 +2,7 @@ import discord, asyncio
 from discord.ext import commands
 from configs.settings import embed_colour
 from database.db import db
+from parser.parsers import ItemData
 from utils.items import *
 
 
@@ -25,7 +26,6 @@ class items_cmd(commands.Cog):
 			amount = 1
 
 		sender = ctx.author
-		sender_id, receiver_id = sender.id, receiver.id
 		if not item_name: return await msg.edit(content=f"Please specify the name of the item, try again\nCheck `{ctx.prefix}help gift` for more info")
 		if receiver.bot: return await msg.edit(content=f"Seriously? You expect a bot to be registered in my database?")
 		if sender.id == receiver.id: return await msg.edit(content="What\'s the point of gifting to yourself?\nStop wasting my resources!")
@@ -35,13 +35,14 @@ class items_cmd(commands.Cog):
 		await msg.edit(content=f"checking item...")
 		item = db.items_db.fetch_item_named(item_name, ctx.guild.id)
 		if not item: return await msg.edit(content=f"`{item_name}` isn\'t an available item, try again later!\nCheck `{ctx.prefix}backpack` to see what you can gift!")
+		item = ItemData(item)
 
 		await msg.edit(content=f"processing data...")
-		try: sender_amount_owned = item["owners"][f"{ctx.guild.id}-{sender_id}"]
+		try: sender_amount_owned = item.get_amount_owned_by(sender.id)
 		except KeyError: sender_amount_owned = 0
-		try: receiver_amount_owned = item["owners"][f"{ctx.guild.id}-{receiver_id}"]
+		try: receiver_amount_owned = item.get_amount_owned_by(receiver.id)
 		except KeyError: receiver_amount_owned = 0
-		max_amount = item["max"]
+		max_amount = item.max_owned
 		new_receiver_amount_owned = receiver_amount_owned + amount
 		new_sender_amount_owned = sender_amount_owned - amount 
 
@@ -53,16 +54,13 @@ class items_cmd(commands.Cog):
 		await msg.edit(content="processing gift...")
 
 		update_fields, set_fields, unset_fields = {}, {}, {}
-		if new_sender_amount_owned == 0: unset_fields[f"owners.{ctx.guild.id}-{sender_id}"] = 0
-		else: set_fields[f"owners.{ctx.guild.id}-{sender_id}"] = new_sender_amount_owned
-		set_fields[f"owners.{ctx.guild.id}-{receiver_id}"] = new_receiver_amount_owned
+		if new_sender_amount_owned == 0: unset_fields[f"owners.{ctx.guild.id}-{sender.id}"] = 0
+		else: set_fields[f"owners.{ctx.guild.id}-{sender.id}"] = new_sender_amount_owned
+		set_fields[f"owners.{ctx.guild.id}-{receiver.id}"] = new_receiver_amount_owned
 		if unset_fields != {}: update_fields["$unset"] = unset_fields
 		update_fields["$set"] = set_fields
 
-		update_result = db.items_db.db.update_one(
-			{"server_id": f"{ctx.guild.id}", "name": f"{item_name}"},
-			update_fields
-		)
+		update_result = item.update_fields(update_fields)
 		success = bool(update_result.matched_count) and bool(update_result.modified_count)
 		if not success: return await msg.edit(content=f"Something went wrong while processing the gift, try again later")
 		
@@ -83,10 +81,40 @@ class items_cmd(commands.Cog):
 
 		ctx.invoked_with = ctx.invoked_with.lower()
 		msg = await ctx.send(content=f"processing...")
-		result = await shop_transactions_check(ctx, msg, count, item_name)
-		if type(result) is str:
-			return await msg.edit(content=f"{result}")
-		count, item_name, item_data, user, user_parser, user_id, amount_owned, supply, max_amount, item_cost, cumul_cost, user_money = result
+		if not count: return await msg.edit(content=f"Please specify the amount of items you want to {ctx.invoked_with}!\nCheck `{ctx.prefix}help {ctx.invoked_with}` for more info")
+		try:
+			count = int(count)
+		except ValueError:
+			if item_name == None:
+				item_name = count
+			else:
+				item_name = f"{count} {item_name}"
+			count = 1
+		if count == 0: return await msg.edit(content=f"Come on! Don\'t try to waste my resources")
+		if count < 0: return await msg.edit(content=f"How do you even {ctx.invoked_with} negative amounts of something")
+		if not item_name: return await msg.edit(content=f"Please specify the name of the item, try again\nCheck `{ctx.prefix}help {ctx.invoked_with}` for more info")
+
+		await msg.edit(content="fetching item and user...")
+		item_data = db.items_db.fetch_item_named(item_name, ctx.guild.id)
+		_does_not_exist_msg_ = f"`{ctx.prefix}shop`" if ctx.invoked_with in ["buy", "purchase"] else f"`{ctx.prefix}backpack`"
+		if not item_data: return await msg.edit(content=f"`{item_name}` does not exist, check {_does_not_exist_msg_} for a list of items you can {ctx.invoked_with}")
+		item = ItemData(item_data)
+
+		user = db.user_db.fetch_user(ctx.author.id, ctx.guild.id)
+		if not user: return await msg.edit(content=f"Hmm... somehow you don\'t exist to me, try again later!")
+		user_parser = UserData(user)
+		user_id = user_parser.user_data['_id']
+
+		await msg.edit(content=f"processing data...")
+		try: amount_owned = item.get_amount_owned_by(ctx.author.id)
+		except KeyError: amount_owned = 0
+
+		try: supply = int(item.supply)
+		except TypeError: supply = None
+
+		max_amount = item.max_owned
+		cumul_cost = item.get_cumul_cost_of(count)
+		user_money = user_parser.get_user_money()
 
 		new_item_count = amount_owned + count
 		new_user_money = user_money - cumul_cost
@@ -125,12 +153,40 @@ class items_cmd(commands.Cog):
 
 		ctx.invoked_with = ctx.invoked_with.lower()
 		msg = await ctx.send(content=f"processing...")
-		result = await shop_transactions_check(ctx, msg, count, item_name)
-		if type(result) is str:
-			return await msg.edit(content=f"{result}")
-		count, item_name, item_data, user, user_parser, user_id, amount_owned, supply, max_amount, item_cost, cumul_cost, user_money = result
+		try:
+			count = int(count)
+		except ValueError:
+			if item_name == None:
+				item_name = count
+			else:
+				item_name = f"{count} {item_name}"
+			count = 1
+		if count == 0: return await msg.edit(content=f"Come on! Don\'t try to waste my resources")
+		if count < 0: return await msg.edit(content=f"How do you even {ctx.invoked_with} negative amounts of something")
+		if not item_name: return await msg.edit(content=f"Please specify the name of the item, try again\nCheck `{ctx.prefix}help {ctx.invoked_with}` for more info")
 
-		cumul_cost = round(cumul_cost * 0.8)
+		await msg.edit(content="fetching item and user...")
+		item_data = db.items_db.fetch_item_named(item_name, ctx.guild.id)
+		_does_not_exist_msg_ = f"`{ctx.prefix}shop`" if ctx.invoked_with in ["buy", "purchase"] else f"`{ctx.prefix}backpack`"
+		if not item_data: return await msg.edit(content=f"`{item_name}` does not exist, check {_does_not_exist_msg_} for a list of items you can {ctx.invoked_with}")
+		item = ItemData(item_data)
+
+		user = db.user_db.fetch_user(ctx.author.id, ctx.guild.id)
+		if not user: return await msg.edit(content=f"Hmm... somehow you don\'t exist to me, try again later!")
+		user_parser = UserData(user)
+		user_id = user_parser.user_data['_id']
+
+		await msg.edit(content=f"processing data...")
+		try: amount_owned = item.get_amount_owned_by(ctx.author.id)
+		except KeyError: amount_owned = 0
+
+		try: supply = int(item.supply)
+		except TypeError: supply = None
+
+		max_amount = item.max_owned
+		user_money = user_parser.get_user_money()
+		cumul_cost = round(item.get_cumul_cost_of(count) * 0.8)
+
 		new_item_count = amount_owned - count
 		new_user_money = user_money + cumul_cost
 		new_supply_count = None
