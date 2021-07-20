@@ -49,7 +49,7 @@ async def help(ctx, cmd=None):
 	embed.add_field(name="Economy", value=f"`pay`, `bank`", inline=True)
 	embed.add_field(name="Items", value=f"`backpack`, `shop`, `buy`, `sell`, `sc`, `gift`", inline=True)
 	embed.add_field(name="Rewards", value=f"`hourly`, `daily`", inline=True)
-	embed.add_field(name="Fun", value=f"`coinflip`, `dice`, `would_you_rather`", inline=True)
+	embed.add_field(name="Fun", value=f"`coinflip`, `dice`, `would_you_rather`, `typeracer`", inline=True)
 	embed.add_field(name="Others", value=f"`collections`", inline=True)
 	embed.add_field(name="System", value=f"`ping`, `prefix`, `help`", inline=True)
 	return await msg.edit(content=None, embed=embed)

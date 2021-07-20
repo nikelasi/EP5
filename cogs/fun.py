@@ -220,19 +220,17 @@ class fun(commands.Cog):
 	@commands.command(aliases=["tr", "type_racer", "typerace"])
 	async def typeracer(self, ctx):
 
-		await ctx.send("Check your DMs")
-		msg = await ctx.author.send("generating a sentence...")
+		msg = await ctx.send("generating a sentence...")
 		sentence_list = json.loads(
 			requests.get(
 				"https://randomwordgenerator.com/json/sentences.json"
 			).content
 		)["data"]
 		sentence = random.choice(sentence_list)["sentence"]
-		words = sentence.split()
 
 		embed = discord.Embed(
-			title="TypeRacer",
-			description=f"When ▶️ is pressed, a sentence will be displayed and a countdown from 3 to 1 will begin.\nWhen the countdown ends, you have to begin typing.\nAfter every word you type, send the word and continue with the next word without space.\nSo basically just take any spaces you see as send what you typed.\n\nPress ▶️ to start countdown",
+			title=f"TypeRacer ({ctx.author.name})",
+			description=f"When ▶️ is pressed, a countdown from 3 to 1 will begin.\nWhen the countdown ends, a sentence will be displayed, and you have to type it out and send it as quick as you can!\n\nPress ▶️ to start countdown",
 			colour=embed_colour
 		)
 		await msg.edit(content=None, embed=embed)
@@ -243,51 +241,51 @@ class fun(commands.Cog):
 			try:
 				reaction, user = await self.client.wait_for("reaction_add", timeout=60, check=check)
 				if str(reaction.emoji) == "▶️": break
+				await msg.delete_reaction(reaction, user)
 			except asyncio.TimeoutError:
-				await msg.delete()
-				return await ctx.author.send(content="Timed Out: You took too long to respond", embed=None)
-		await msg.delete()
-		msg = await ctx.author.send(content="Starting...")
+				return await msg.edit(content="Timed Out: You took too long to respond", embed=None)
+		await msg.clear_reactions()
 
 		embed = discord.Embed(
-			title="TypeRacer",
+			title=f"TypeRacer ({ctx.author.name})",
 			colour=embed_colour
 		)
-		embed.add_field(name="Sentence", value=f"`{sentence}`")
 
 		for num in [":three:", ":two:", ":one:"]:
 			embed.add_field(name="Countdown", value=num)
 			await msg.edit(content=None, embed=embed)
-			asyncio.sleep(1)
-			embed.remove_field(1)
+			await asyncio.sleep(1)
+			embed.remove_field(0)
 
 		user_sentence = ""
 		time_elapsed = 0.0
-		embed.description = f"Type the following sentence!\nWords left: __**{len(words)}**__"
-		embed.add_field(name="Your Sentence", value=f"`{user_sentence}`")
+		embed.description = f"Type the following sentence!"
+		embed.add_field(name="Sentence", value=f"`{sentence}`")
 		await msg.edit(content=None, embed=embed)
-		check = lambda message: message.author == ctx.author and isinstance(message.channel, discord.DMChannel)
-		while len(words) > 1:
-			try:
-				start = time.time()
-				message = await self.client.wait_for('message', timeout=60, check=check)
-				time_elapsed += time.time() - start
-				user_sentence += f"{message.content} "
-				embed.remove_field(1)
-				embed.add_field(name="Your Sentence", value=f"`{user_sentence.strip()}`")
-				embed.description = f"Words left: __**{len(words)}**__"
-				await msg.edit(content=None, embed=embed)
-				del words[0]
-			except asyncio.TimeoutError:
-				return await msg.edit(content="Timed Out: You left the race idle", embed=None)
+		check = lambda message: message.author == ctx.author and ctx.channel.id == message.channel.id
+		try:
+			start = time.time()
+			message = await self.client.wait_for('message', timeout=120, check=check)
+			time_elapsed += time.time() - start
+			user_sentence += message.content
+			await message.delete()
+			embed.add_field(name="Your Sentence", value=f"`{user_sentence.strip()}`")
+			await msg.edit(content=None, embed=embed)
+		except asyncio.TimeoutError:
+			return await msg.edit(content="Timed Out: You left the race idle.", embed=None)
 
 		await msg.edit(content="Finished. Calculating...", embed=None)
+
 		user_sentence = user_sentence.strip()
 		char_typed = len(user_sentence)
 		cps = round(char_typed/time_elapsed)
-		wpm = round((char_typed/5)/(time_elapsed/60))
 		accuracy = (difflib.SequenceMatcher(None, sentence, user_sentence).ratio()*100)
-		embed.description = f"__**Results**__\nCharacters Per Second (CPS): **{cps}**\nWords Per Minute (WPM): **{wpm}**\nAccuracy: **{accuracy:.1f}%**"
+		raw_wpm = round((char_typed/5)/(time_elapsed/60))
+		wpm = round(raw_wpm*(accuracy/100))
+		if len(user_sentence) > len(sentence)+15 or raw_wpm > 240:
+			embed.description = f"__**Results**__\n||no u joker, u know what u did||"
+			return await msg.edit(content=None, embed=embed)
+		embed.description = f"__**Results**__\nTime Taken: {time_elapsed:.1f}s\nCharacters Per Second (CPS): **{cps}**\nWords Per Minute (WPM): **{wpm if wpm < 125 else str(wpm) + ' (likely copy pasted)'}**\nRaw WPM: **{raw_wpm}**\nAccuracy: **{accuracy:.1f}%**"
 		return await msg.edit(content=None, embed=embed)
 
 	@typeracer.error

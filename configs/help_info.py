@@ -6,6 +6,10 @@ help_info_data = {
 			("Examples", "{p}{cmd}\n{p}{cmd} @User")
 		]
 	},
+	("typeracer", "tr", "type_racer", "typerace"): {
+		"description": "`{p}{cmd}`\nStarts a typeracer (individual)",
+		"fields": []
+	},
 	("leaderboard", "ldb", "lb"): {
 		"description": "`{p}{cmd}`\nSee the leaderboard of the server!\nSorted according to **Σ**",
 		"fields": []
