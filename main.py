@@ -8,7 +8,9 @@ from utils.formatters import seconds_to_time
 owner_ids = [593735027121061889, 348307478808756224]
 in_development = False
 
-client = commands.Bot(command_prefix=db.prefix_db.get_prefix, case_insensitive=True)
+intents = discord.Intents.all()
+intents.members = True
+client = commands.Bot(command_prefix=db.prefix_db.get_prefix, case_insensitive=True, intents=intents)
 client.remove_command('help')
 
 class PriceUpdateData:
@@ -54,6 +56,8 @@ async def help(ctx, cmd=None):
 
 @client.event
 async def on_message(message):
+	if isinstance(message.channel, discord.DMChannel):
+		return
 	if message.author.bot:
 		return
 
