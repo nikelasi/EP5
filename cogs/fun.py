@@ -221,12 +221,10 @@ class fun(commands.Cog):
 	async def typeracer(self, ctx):
 
 		msg = await ctx.send("generating a sentence...")
-		sentence_list = json.loads(
-			requests.get(
-				"https://randomwordgenerator.com/json/sentences.json"
-			).content
-		)["data"]
-		sentence = random.choice(sentence_list)["sentence"]
+		sentence_list = requests.get(
+			"https://raw.githubusercontent.com/mime-r/typingtest.html/main/app/textscraping/quotes.txt"
+		).content.splitlines()
+		sentence = random.choice(sentence_list).decode()
 
 		embed = discord.Embed(
 			title=f"TypeRacer ({ctx.author.name})",
