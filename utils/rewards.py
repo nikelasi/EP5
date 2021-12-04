@@ -65,7 +65,7 @@ async def process_reward(ctx, reward_data): #pylint: disable=E0213
 				colour=embed_colour
 			)
 
-			embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url) #pylint: disable=E1101
+			embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.display_avatar.url) #pylint: disable=E1101
 			embed.add_field(name="Reward", value=f"**{_prize} Σ**", inline=True)
 			embed.add_field(name="Next Reward", value=f"{process_results['next_reward']}", inline=True)
 			return await msg.edit(content=None, embed=embed)

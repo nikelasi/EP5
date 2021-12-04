@@ -134,7 +134,7 @@ class economy(commands.Cog):
 				description=f"**{money_to_upgrade:,} Σ** to upgrade to {user_parser.get_interest_percent()+1}% interest",
 				colour=embed_colour
 			)
-			embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url) #pylint: disable=E1101
+			embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.display_avatar.url) #pylint: disable=E1101
 			if (user_parser.get_user_money() + user_parser.get_bank_money()) < money_to_upgrade: embed.description = f"{embed.description}\nYou can\'t afford the upgrade yet"
 			else: embed.description = f"{embed.description}\nYou can afford the upgrade, make sure **{money_to_upgrade:,} Σ** is in the bank\nand run `{ctx.prefix}bank upgrade`"
 			embed.add_field(name="Interest", value=f"**{user_parser.get_interest_percent()}%**", inline=True)

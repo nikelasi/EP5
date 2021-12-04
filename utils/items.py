@@ -20,7 +20,7 @@ def item_embed_content_of(ctx, item_data, footer_info=None, backpack=None):
 	)
 
 	if not backpack: embed.set_author(icon_url=ctx.guild.icon_url, name=f"{ctx.guild.name}\'s Items")
-	if backpack: embed.set_author(icon_url=ctx.author.avatar_url, name=f"{ctx.author}\'s {backpack}")
+	if backpack: embed.set_author(icon_url=ctx.author.display_avatar.url, name=f"{ctx.author}\'s {backpack}")
 	embed.add_field(name="Cost", value=f"**{item_data['cost']:,} Σ**", inline=True)
 
 	if f"{ctx.guild.id}-{ctx.author.id}" in item.owners_data:

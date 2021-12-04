@@ -140,7 +140,7 @@ class items_cmd(commands.Cog):
 		embed.add_field(name="New Balance", value=f"**{new_user_money:,} Σ**", inline=True)
 		embed.add_field(name=f"Item{'s' if count > 1 else ''}", value=f"`{count}` `{item_name}`", inline=True)
 		if supply: embed.add_field(name=f"New Item Supply", value=f"{new_supply_count}", inline=True)
-		embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url)
+		embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.display_avatar.url)
 		return await msg.edit(content=None, embed=embed)
 
 	@buy.error
@@ -211,7 +211,7 @@ class items_cmd(commands.Cog):
 		embed.add_field(name="New Balance", value=f"**{new_user_money:,} Σ**", inline=True)
 		embed.add_field(name=f"Item{'s' if count > 1 else ''}", value=f"`{count}` `{item_name}`", inline=True)
 		if supply: embed.add_field(name=f"New Item Supply", value=f"{new_supply_count}", inline=True)
-		embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url)
+		embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.display_avatar.url)
 		return await msg.edit(content=None, embed=embed)
 
 	@sell.error

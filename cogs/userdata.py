@@ -56,7 +56,7 @@ class userdata(commands.Cog):
 
 			embed.add_field(name="User", value=f"Balance: **{data_parser.get_user_money():,} Σ**\nPrestige **Rank {data_parser.get_prestige()+1}** [{1 if data_parser.get_prestige() == 0 else (1+(data_parser.get_prestige()*0.75))}x Reward Multiplier]")
 			embed.add_field(name="Others", value=f"ServerID: `{data_parser.get_id()[0]}`\nUserID: `{data_parser.get_id()[1]}`")
-			embed.set_author(name=f"{member}", icon_url=member.avatar_url)
+			embed.set_author(name=f"{member}", icon_url=member.display_avatar.url)
 			return await msg.edit(content=None, embed=embed)
 
 		#return await ctx.send(f"Good job lmao. You broke the system")
@@ -72,7 +72,7 @@ class userdata(commands.Cog):
 
 		embed.add_field(name="User", value=f"Balance: **{data_parser.get_user_money():,} Σ**\nPrestige Rank **{data_parser.get_prestige()+1}** [{0 if data_parser.get_prestige() == 0 else (1+(data_parser.get_prestige()*0.75))}x Reward Multiplier]")
 		embed.add_field(name="Others", value=f"ServerID: `{data_parser.get_id()[0]}`\nUserID: `{data_parser.get_id()[1]}`")
-		embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url)
+		embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.display_avatar.url)
 		return await msg.edit(content=None, embed=embed)
 
 	@stat.error

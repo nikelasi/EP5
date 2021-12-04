@@ -163,7 +163,7 @@ class fun(commands.Cog):
 		)
 
 		embed.add_field(name="More Info", value=f"{more_info}")
-		embed.set_author(name=f'{ctx.author}', icon_url=ctx.author.avatar_url)
+		embed.set_author(name=f'{ctx.author}', icon_url=ctx.author.display_avatar.url)
 		await msg.edit(content=None, embed=embed)
 		reactions = ["🟦", "🟥", "🇽"]
 		for reaction in reactions: await msg.add_reaction(reaction)
@@ -194,7 +194,7 @@ class fun(commands.Cog):
 		)
 		embed.add_field(name="Answer", value=f"{answer.value}", inline=True)
 		embed.add_field(name="Guess", value=f"{chosen.value}", inline=True)
-		embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url)
+		embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.display_avatar.url)
 		if chosen == answer:
 			money = random.randint(25, 50)
 			user = db.user_db.fetch_user(ctx.author.id, ctx.guild.id)
