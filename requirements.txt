@@ -1,7 +1,7 @@
-discord
 asyncio
 pymongo
 dnspython
 bs4
 requests
 datetime
+git+https://github.com/Pycord-Development/pycord#egg=py-cord[voice]
